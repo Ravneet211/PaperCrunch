@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -19,6 +20,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private SurfaceHolder mHolder;
     public Camera mCamera;
     private static final String TAG = CameraPreview.class.getSimpleName();
+    private float mDist;
 
     public CameraPreview(Context context, Camera camera) {
         super(context);
@@ -121,5 +123,51 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
         }
         return cameraId;
+    }
+    @Override
+    public boolean onTouchEvent(MotionEvent motionEvent) {
+        Camera.Parameters params = mCamera.getParameters();
+        int action = motionEvent.getAction();
+
+        if (motionEvent.getPointerCount() > 1) {
+            // handle multi-touch events
+            if (action == MotionEvent.ACTION_POINTER_DOWN) {
+                mDist = getFingerSpacing(motionEvent);
+            } else if (action == MotionEvent.ACTION_MOVE && params.isZoomSupported()) {
+                //mCamera.cancelAutoFocus();
+                handleZoom(motionEvent, params);
+            }
+        } else {
+            // handle single touch events
+            if (action == MotionEvent.ACTION_UP) {
+                //handleFocus(event, params);
+            }
+        }
+        return true;
+    }
+    private void handleZoom(MotionEvent event, Camera.Parameters params) {
+        int maxZoom = params.getMaxZoom();
+        int zoom = params.getZoom();
+        float newDist = getFingerSpacing(event);
+        if (newDist > mDist) {
+            //zoom in
+            if (zoom < maxZoom)
+                zoom++;
+        } else if (newDist < mDist) {
+            //zoom out
+            if (zoom > 0)
+                zoom--;
+        }
+        mDist = newDist;
+        params.setZoom(zoom);
+        mCamera.setParameters(params);
+    }
+
+    /** Determine the space between the first two fingers */
+    private float getFingerSpacing(MotionEvent event) {
+        // ...
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float)Math.sqrt((double)(x*x+y*y));
     }
 }

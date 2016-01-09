@@ -1,5 +1,6 @@
 package com.example.ravneet.cameratester;
 
+import android.content.Context;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Environment;
@@ -17,6 +18,10 @@ import java.util.Date;
  */
 public class CaptureImage implements Camera.PictureCallback{
     private final String LOG_TAG = CaptureImage.class.getSimpleName();
+    private Context mContext;
+    public void CaptureImage(Context context) {
+        mContext = context;
+    }
     @Override
     public void onPictureTaken(byte[] data, Camera camera) {
 
@@ -25,7 +30,6 @@ public class CaptureImage implements Camera.PictureCallback{
             Log.d(LOG_TAG, "Error creating media file, check storage permissions");
             return;
         }
-
         try {
             FileOutputStream fos = new FileOutputStream(pictureFile);
             fos.write(data);
