@@ -18,6 +18,14 @@ android {
         }
     }
 }
+task copyJniLibs(type: Copy) {
+    from 'libs/armeabi'
+    into 'src/main/jniLibs/armeabi'
+}
+tasks.withType(JavaCompile) {
+    compileTask -> compileTask.dependsOn(copyJniLibs)
+}
+clean.dependsOn 'cleanCopyJniLibs'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])

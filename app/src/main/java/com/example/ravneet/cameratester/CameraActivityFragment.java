@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -14,8 +15,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -28,7 +34,7 @@ public class CameraActivityFragment extends Fragment {
     private CameraPreview mPreview;
     public View rootView;
     public FrameLayout preview;
-    public TouchImageView imageView;
+    public ImageView imageView;
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -36,7 +42,15 @@ public class CameraActivityFragment extends Fragment {
             FrameLayout preview = (FrameLayout) v.findViewById(R.id.camera_preview);
             preview.removeView(v.findViewWithTag("Surface"));
             releaseCameraAndPreview();
-            Bitmap realImage = BitmapFactory.decodeByteArray(data,0,data.length);
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 8;
+            Bitmap realImage = BitmapFactory.decodeByteArray(data, 0, data.length,options);
+            data = null;
+//            imageView = new TouchImageView(getActivity());
+//            imageView.setImageBitmap(realImage);
+//            RotateTask rotateTask = new RotateTask(imageView,realImage);
+//            rotateTask.execute();
+
             /*File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
             if(pictureFile.exists()) {
                 pictureFile.delete();
@@ -47,16 +61,25 @@ public class CameraActivityFragment extends Fragment {
             matrix.postRotate((float)90);
             bitmapImage = Bitmap.createBitmap(bitmapImage,0,0,bitmapImage.getWidth(),bitmapImage.getHeight(),matrix,false);
             oldBitmap.recycle();*/
+            imageView = new ImageView(getActivity());
+            realImage = rotateImageIfRequired(realImage,90);
 
-            imageView = new TouchImageView(getActivity());
-            imageView.setImageBitmap(realImage);
             //imageView.setRotation(90);
-            //imageView.setPadding(0,0,0,0);
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT);
-            lp.setMargins(0,0,0,0);
+//            final JniBitmapHolder jniBitmapHolder = new JniBitmapHolder(realImage);
+//            realImage.recycle();
+//            jniBitmapHolder.rotateBitmapCcw90();
+//            realImage = jniBitmapHolder.getBitmapAndFree();
+            imageView.setImageBitmap(realImage);
+//            RotateTask rotateTask = new RotateTask(imageView,realImage);
+//            rotateTask.execute();
+            imageView.setPadding(0, 0, 0, 0);
+            imageView.setAdjustViewBounds(true);
+            LinearLayout contain = (LinearLayout)preview.getParent();
+            contain.removeAllViews();
+            contain.addView(imageView);
+            imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT,1.0f);
             imageView.setLayoutParams(lp);
-            preview.addView(imageView);
-
         }
 
         public static final int MEDIA_TYPE_IMAGE = 1;
@@ -149,7 +172,7 @@ public class CameraActivityFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_camera, container, false);
         releaseCameraAndPreview();
         mCamera = getCameraInstance();
-
+        mCamera.setDisplayOrientation(90);
         // Create our Preview view and set it as the content of our activity.
         if (mCamera != null) {
             mPreview = new CameraPreview(getActivity(), mCamera);
@@ -223,19 +246,90 @@ public class CameraActivityFragment extends Fragment {
             mCamera.setParameters(parameter);
         }
     }*/
-    public Bitmap rotate(Bitmap bitmap,int degree)
+    public Bitmap rotateImageIfRequired(Bitmap bitmap, int degree)
     {
 
         int w = bitmap.getWidth();
         int h = bitmap.getHeight();
-
+        int d = getRotationDegree(bitmap);
         Matrix mtx = new Matrix();
         mtx.postTranslate(-w/2,h/2);
         mtx.postRotate(degree);
-        mtx.postTranslate(w/2,h/2);
+        mtx.postTranslate(w / 2, h / 2);
         return Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, true);
 //        iv.setScaleType(ImageView.ScaleType.CENTER);
 //        iv.setImageBitmap(resizedBitmap);
+    }
+    public int getRotationDegree(Bitmap bitmap) {
+        File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+        int rotationInDegrees = 0;
+        if (pictureFile == null){
+            Log.d(LOG_TAG, "Error creating media file, check storage permissions");
+            return 0;
+        }
+
+        try {
+            FileOutputStream fos = new FileOutputStream(pictureFile);
+            ExifInterface exif = new ExifInterface(pictureFile.getPath());
+            int rotation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+            rotationInDegrees = exifToDegrees(rotation);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.d(LOG_TAG, "File not found: " + e.getMessage());
+        } catch (IOException e) {
+            Log.d(LOG_TAG, "Error accessing file: " + e.getMessage());
+        }
+        return rotationInDegrees;
+    }
+
+    public static final int MEDIA_TYPE_IMAGE = 1;
+    public static final int MEDIA_TYPE_VIDEO = 2;
+
+    /** Create a file Uri for saving an image or video */
+    private static Uri getOutputMediaFileUri(int type){
+        return Uri.fromFile(getOutputMediaFile(type));
+    }
+
+    /** Create a File for saving an image or video */
+    private static File getOutputMediaFile(int type){
+        // To be safe, you should check that the SDCard is mounted
+        // using Environment.getExternalStorageState() before doing this.
+
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "MyCameraApp");
+        // This location works best if you want the created images to be shared
+        // between applications and persist after your app has been uninstalled.
+
+        // Create the storage directory if it does not exist
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                Log.d("MyCameraApp", "failed to create directory");
+                return null;
+            }
+        }
+
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File mediaFile;
+        if (type == MEDIA_TYPE_IMAGE){
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "IMG_"+ timeStamp + ".jpg");
+        } else if(type == MEDIA_TYPE_VIDEO) {
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "VID_"+ timeStamp + ".mp4");
+        } else {
+            return null;
+        }
+
+        return mediaFile;
+    }
+    private static int exifToDegrees(int exifOrientation) {
+        if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) { return 90;
+            }
+        else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {  return 180; }
+        else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {  return 270;
+        }
+        return 0;
     }
 
 }

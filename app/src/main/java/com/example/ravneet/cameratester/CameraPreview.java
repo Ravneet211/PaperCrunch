@@ -25,7 +25,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public CameraPreview(Context context, Camera camera) {
         super(context);
         mCamera = camera;
-
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
         mHolder = getHolder();
@@ -69,6 +68,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         int cameraID = getCameraId();
         if(cameraID != -1) {
             setCameraDisplayOrientation((Activity)getContext(),cameraID,mCamera);
+            Camera.Parameters mCameraParameters= mCamera.getParameters();
+            mCameraParameters.setRotation(90);
+            mCamera.setParameters(mCameraParameters);
+
         }
 
         // start preview with new settings
@@ -116,7 +119,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         for (int i = 0; i < numberOfCameras; i++) {
             Camera.CameraInfo info = new Camera.CameraInfo();
             Camera.getCameraInfo(i, info);
-            if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                 Log.d(VIEW_LOG_TAG, "Camera found");
                 cameraId = i;
                 break;
@@ -170,4 +173,5 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         float y = event.getY(0) - event.getY(1);
         return (float)Math.sqrt((double)(x*x+y*y));
     }
+
 }
