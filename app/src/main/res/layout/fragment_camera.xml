@@ -20,6 +20,22 @@
             android:text="Capture"
             android:gravity="center"
             android:layout_marginBottom="10dp" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Crop"
+            android:id="@+id/crop_button"
+            android:layout_gravity="right|top"
+            android:layout_margin="10dp" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Discard"
+            android:id="@+id/discard_button"
+            android:layout_gravity="left|top"
+            android:layout_margin="10dp" />
     </FrameLayout>
 
 </RelativeLayout>

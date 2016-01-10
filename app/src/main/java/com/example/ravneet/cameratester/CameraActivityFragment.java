@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,6 +38,9 @@ public class CameraActivityFragment extends Fragment {
     public View rootView;
     public FrameLayout preview;
     public com.isseiaoki.simplecropview.CropImageView imageView;
+    Button saveButton;
+    Button discardButton;
+    Button captureButton;
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -56,20 +58,44 @@ public class CameraActivityFragment extends Fragment {
             data = null;
             imageView = new com.isseiaoki.simplecropview.CropImageView(getActivity());
             imageView.setImageBitmap(realImage);
-            //imageView.rotateImage(CropImageView.RotateDegrees.ROTATE_90D);
             imageView.setPadding(0, 0, 0, 0);
             imageView.setAdjustViewBounds(true);
             RelativeLayout contain = (RelativeLayout)preview.getParent();
-            contain.removeAllViews();
-            contain.addView(imageView);
-            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,RelativeLayout.LayoutParams.MATCH_PARENT);
+            //Button captureButton = (Button)preview.findViewById(R.id.button_capture);
+            contain.removeView(captureButton);
+            preview.addView(imageView);
+            //Button saveButton = (Button)preview.findViewById(R.id.crop_button);
+            saveButton.setVisibility(View.VISIBLE);
+            //Button discardButton = (Button)preview.findViewById(R.id.discard_button);
+            discardButton.setVisibility(View.VISIBLE);
+            //captureButton.setVisibility(View.GONE);
+            configureButtons(discardButton,saveButton,imageView);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT);
             lp.setMargins(0, 0, 0, 0);
             imageView.setLayoutParams(lp);
-
-            //imageView.setScaleType(ImageView.ScaleType.FIT_XY);
             imageView.setCropEnabled(true);
             imageView.setCropMode(CropImageView.CropMode.RATIO_FREE);
-            imageView.setInitialFrameScale(0.9f);
+            imageView.setInitialFrameScale(0.75f);
+//              releaseCameraAndPreview();
+//              String filename = "Crop_Image.png";
+//              BitmapFactory.Options options = new BitmapFactory.Options();
+//              options.inSampleSize = 2;
+//              Bitmap realImage = BitmapFactory.decodeByteArray(data,0,data.length,options);
+//              try {
+//                  FileOutputStream fo = getActivity().openFileOutput(filename, Context.MODE_PRIVATE);
+//                  realImage.compress(Bitmap.CompressFormat.PNG, 100, fo);
+//                  fo.close();
+//                  realImage.recycle();
+//                  Intent intent = new Intent(getActivity(),CropActivity.class);
+//                  intent.putExtra(Intent.EXTRA_STREAM,filename);
+//                  startActivity(intent);
+//              }
+//              catch(Exception e) {
+//                Log.v(LOG_TAG,e.toString());
+//                //throw new NullPointerException();
+//            }
+
+
         }
 
         public static final int MEDIA_TYPE_IMAGE = 1;
@@ -161,6 +187,12 @@ public class CameraActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_camera, container, false);
         releaseCameraAndPreview();
+        saveButton = (Button)rootView.findViewById(R.id.crop_button);
+        //saveButton.setVisibility(View.INVISIBLE);
+        discardButton = (Button)rootView.findViewById(R.id.discard_button);
+        //discardButton.setVisibility(View.INVISIBLE);
+//        Toolbar plz = (Toolbar)getActivity().findViewById(R.id.toolbar);
+//        plz.setVisibility(View.GONE);
         mCamera = getCameraInstance();
         mCamera.setDisplayOrientation(90);
         // Create our Preview view and set it as the content of our activity.
@@ -173,7 +205,7 @@ public class CameraActivityFragment extends Fragment {
 
             // Add a listener to the Capture button
             // Add a listener to the Capture button
-            Button captureButton = (Button) rootView.findViewById(R.id.button_capture);
+            captureButton = (Button) rootView.findViewById(R.id.button_capture);
             captureButton.setOnClickListener(
                     new View.OnClickListener() {
                         @Override
@@ -325,8 +357,8 @@ public class CameraActivityFragment extends Fragment {
         DisplayMetrics metrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         int width = metrics.widthPixels;
-        Toolbar plz = (Toolbar)getActivity().findViewById(R.id.toolbar);
-        plz.setVisibility(View.GONE);
+//        Toolbar plz = (Toolbar)getActivity().findViewById(R.id.toolbar);
+//        plz.setVisibility(View.GONE);
         int height = getActivity().getWindow().getDecorView().getHeight();
         Rect rectangle= new Rect();
         Window window= getActivity().getWindow();
@@ -344,6 +376,16 @@ public class CameraActivityFragment extends Fragment {
 //        styledAttributes.recycle();
 
         return Bitmap.createScaledBitmap(bitmap,width,height,false);
+    }
+    public void configureButtons(Button discardButton, final Button cropButton, final CropImageView cropImageView) {
+        discardButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bitmap croppedImage = cropImageView.getCroppedBitmap();
+                expandBitmap(croppedImage);
+                cropImageView.setImageBitmap(croppedImage);
+            }
+        });
     }
 
 }
