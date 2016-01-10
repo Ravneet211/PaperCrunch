@@ -3,20 +3,25 @@ package com.example.ravneet.cameratester;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+
+import com.isseiaoki.simplecropview.CropImageView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,7 +29,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -34,7 +38,7 @@ public class CameraActivityFragment extends Fragment {
     private CameraPreview mPreview;
     public View rootView;
     public FrameLayout preview;
-    public ImageView imageView;
+    public com.isseiaoki.simplecropview.CropImageView imageView;
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -43,43 +47,29 @@ public class CameraActivityFragment extends Fragment {
             preview.removeView(v.findViewWithTag("Surface"));
             releaseCameraAndPreview();
             BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 8;
+            options.inSampleSize = 2;
             Bitmap realImage = BitmapFactory.decodeByteArray(data, 0, data.length,options);
+            if(realImage.getWidth() > realImage.getHeight()) {
+                realImage = rotateImageIfRequired(realImage, 90);
+            }
+            realImage = expandBitmap(realImage);
             data = null;
-//            imageView = new TouchImageView(getActivity());
-//            imageView.setImageBitmap(realImage);
-//            RotateTask rotateTask = new RotateTask(imageView,realImage);
-//            rotateTask.execute();
-
-            /*File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-            if(pictureFile.exists()) {
-                pictureFile.delete();
-            }*/
-
-            /*Bitmap oldBitmap = bitmapImage;
-            Matrix matrix = new Matrix();
-            matrix.postRotate((float)90);
-            bitmapImage = Bitmap.createBitmap(bitmapImage,0,0,bitmapImage.getWidth(),bitmapImage.getHeight(),matrix,false);
-            oldBitmap.recycle();*/
-            imageView = new ImageView(getActivity());
-            realImage = rotateImageIfRequired(realImage,90);
-
-            //imageView.setRotation(90);
-//            final JniBitmapHolder jniBitmapHolder = new JniBitmapHolder(realImage);
-//            realImage.recycle();
-//            jniBitmapHolder.rotateBitmapCcw90();
-//            realImage = jniBitmapHolder.getBitmapAndFree();
+            imageView = new com.isseiaoki.simplecropview.CropImageView(getActivity());
             imageView.setImageBitmap(realImage);
-//            RotateTask rotateTask = new RotateTask(imageView,realImage);
-//            rotateTask.execute();
+            //imageView.rotateImage(CropImageView.RotateDegrees.ROTATE_90D);
             imageView.setPadding(0, 0, 0, 0);
             imageView.setAdjustViewBounds(true);
-            LinearLayout contain = (LinearLayout)preview.getParent();
+            RelativeLayout contain = (RelativeLayout)preview.getParent();
             contain.removeAllViews();
             contain.addView(imageView);
-            imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT,1.0f);
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,RelativeLayout.LayoutParams.MATCH_PARENT);
+            lp.setMargins(0, 0, 0, 0);
             imageView.setLayoutParams(lp);
+
+            //imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+            imageView.setCropEnabled(true);
+            imageView.setCropMode(CropImageView.CropMode.RATIO_FREE);
+            imageView.setInitialFrameScale(0.9f);
         }
 
         public static final int MEDIA_TYPE_IMAGE = 1;
@@ -253,9 +243,9 @@ public class CameraActivityFragment extends Fragment {
         int h = bitmap.getHeight();
         int d = getRotationDegree(bitmap);
         Matrix mtx = new Matrix();
-        mtx.postTranslate(-w/2,h/2);
+        //mtx.postTranslate(-w/2,h/2);
         mtx.postRotate(degree);
-        mtx.postTranslate(w / 2, h / 2);
+        //mtx.postTranslate(w / 2, h / 2);
         return Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, true);
 //        iv.setScaleType(ImageView.ScaleType.CENTER);
 //        iv.setImageBitmap(resizedBitmap);
@@ -330,6 +320,30 @@ public class CameraActivityFragment extends Fragment {
         else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {  return 270;
         }
         return 0;
+    }
+    public Bitmap expandBitmap(Bitmap bitmap) {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int width = metrics.widthPixels;
+        Toolbar plz = (Toolbar)getActivity().findViewById(R.id.toolbar);
+        plz.setVisibility(View.GONE);
+        int height = getActivity().getWindow().getDecorView().getHeight();
+        Rect rectangle= new Rect();
+        Window window= getActivity().getWindow();
+        window.getDecorView().getWindowVisibleDisplayFrame(rectangle);
+        int statusBarHeight= rectangle.top;
+        height-=statusBarHeight;
+        //View decorView = getActivity().getWindow().getDecorView();
+// Hide the status bar.
+//        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+//        decorView.setSystemUiVisibility(uiOptions);
+//        final TypedArray styledAttributes = getContext().getTheme().obtainStyledAttributes(
+//                new int[] { android.R.attr.actionBarSize });
+//        int mActionBarSize = (int) styledAttributes.getDimension(0, 0);
+//        height-=mActionBarSize;
+//        styledAttributes.recycle();
+
+        return Bitmap.createScaledBitmap(bitmap,width,height,false);
     }
 
 }

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     >
     <FrameLayout
         android:id="@+id/camera_preview"
@@ -10,15 +9,17 @@
         android:layout_height="match_parent"
         android:layout_margin="0dp"
         android:padding="0dp"
-        android:layout_weight="1"
-        android:height="0dp"
-        />
+        >
 
-    <Button
-        android:id="@+id/button_capture"
-        android:text="Capture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        />
-</LinearLayout>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/button_capture"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_alignParentTop="true"
+            android:text="Capture"
+            android:gravity="center"
+            android:layout_marginBottom="10dp" />
+    </FrameLayout>
+
+</RelativeLayout>
