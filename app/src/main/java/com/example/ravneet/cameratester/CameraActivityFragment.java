@@ -165,30 +165,38 @@ public class CameraActivityFragment extends Fragment {
         if (plz != null) {
             plz.setVisibility(View.GONE);
         }
-        mCamera = getCameraInstance();
+        if(mCamera == null) {
+            mCamera = getCameraInstance();
+            mCamera.setDisplayOrientation(90);
+            if(mPreview != null) {
+                preview.removeView(mPreview);
+            }
+        }
+                // Create our Preview view and set it as the content of our activity.
         if (mCamera != null) {
             mPreview = new CameraPreview(getActivity(), mCamera);
-            mCamera.setDisplayOrientation(90);
             preview = (FrameLayout) rootView.findViewById(R.id.camera_preview);
             preview.addView(mPreview);
-        }
+            mPreview.setTag("Surface");
 
-        captureButton = (Button) rootView.findViewById(R.id.button_capture);
-        captureButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // get an image from the camera
-                        if (mCamera != null) {
-                            mCamera.takePicture(null, null, mPicture);
+
+            captureButton = (Button) rootView.findViewById(R.id.button_capture);
+            captureButton.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // get an image from the camera
+                            if (mCamera != null) {
+                                mCamera.takePicture(null, null, mPicture);
+                            }
                         }
-                    }
-                }
-        );
+                    });
 
+        }// Add a listener to the Capture button
         return rootView;
 
     }
+
 
     /**
      * A safe way to get an instance of the Camera object.
@@ -213,6 +221,8 @@ public class CameraActivityFragment extends Fragment {
         if (mPreview != null) {
             mPreview.destroyDrawingCache();
             mPreview.mCamera = null;
+            preview.removeView(mPreview);
+            mPreview = null;
         }
     }
 
@@ -483,4 +493,26 @@ public class CameraActivityFragment extends Fragment {
         super.onPause();
         //releaseCameraAndPreview();
     }
+    @Override
+    public void onStop() {
+        super.onStop();
+        releaseCameraAndPreview();
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.e(LOG_TAG, "onStart() called");
+        if (mCamera == null) {
+            Log.e(LOG_TAG, "onStart() camera null");
+            mCamera = getCameraInstance();
+            mCamera.setDisplayOrientation(90);
+            if (mCamera != null) {
+                mPreview = new CameraPreview(getActivity(), mCamera);
+                preview = (FrameLayout) rootView.findViewById(R.id.camera_preview);
+                preview.addView(mPreview);
+                mPreview.setTag("Surface");
+            }
+        }
+    }
+        // Create our Preview view and set it as the content of our activity.
 }
