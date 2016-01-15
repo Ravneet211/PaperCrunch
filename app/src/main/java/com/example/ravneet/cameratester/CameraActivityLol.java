@@ -1,5 +1,9 @@
 package com.example.ravneet.cameratester;
 
+/**
+ * Created by Ravneet on 1/15/16.
+ */
+
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -47,17 +51,8 @@ import cz.msebera.android.httpclient.Header;
 
 /**
  * A placeholder fragment containing a simple view.
- * <p/>
- * Created by Ravneet on 1/15/16.
  */
-/**
- * Created by Ravneet on 1/15/16.
- */
-
-/**
- * A placeholder fragment containing a simple view.
- */
-public class CameraActivityFragment extends Fragment {
+public class CameraActivityLol extends Fragment {
     private static final String LOG_TAG = CameraActivityFragment.class.getSimpleName();
     private Camera mCamera;
     private CameraPreview mPreview;
@@ -167,7 +162,6 @@ public class CameraActivityFragment extends Fragment {
         }
         mCamera = getCameraInstance();
         if (mCamera != null) {
-            mPreview = new CameraPreview(getActivity(), mCamera);
             mCamera.setDisplayOrientation(90);
             preview = (FrameLayout) rootView.findViewById(R.id.camera_preview);
             preview.addView(mPreview);
@@ -484,3 +478,5 @@ public class CameraActivityFragment extends Fragment {
         //releaseCameraAndPreview();
     }
 }
+
+

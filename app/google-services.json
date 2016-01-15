@@ -1,0 +1,51 @@
+{
+  "project_info": {
+    "project_id": "camertester-1189",
+    "project_number": "724262924237",
+    "name": "CamerTester"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:724262924237:android:00ff96d8fe131a10",
+        "client_id": "android:com.example.ravneet.cameratester",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.example.ravneet.cameratester"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "724262924237-j1ffjj11gvc0uppmg8ijatmskcd6ah2u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ravneet.cameratester",
+            "certificate_hash": "ECC6770B806F85DA34F8F942C40AFF196AE03A64"
+          }
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 1,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}

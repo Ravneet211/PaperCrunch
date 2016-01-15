@@ -68,9 +68,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         int cameraID = getCameraId();
         if(cameraID != -1) {
             setCameraDisplayOrientation((Activity)getContext(),cameraID,mCamera);
-            Camera.Parameters mCameraParameters= mCamera.getParameters();
-            mCameraParameters.setRotation(90);
-            mCamera.setParameters(mCameraParameters);
+            try {
+                Camera.Parameters mCameraParameters = mCamera.getParameters();
+                mCameraParameters.setRotation(90);
+                mCamera.setParameters(mCameraParameters);
+            }catch(Exception e) {
+                Log.e(CameraPreview.class.getSimpleName(),e.toString());
+            }
 
         }
 
