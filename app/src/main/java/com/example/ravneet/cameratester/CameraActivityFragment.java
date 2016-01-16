@@ -22,9 +22,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.widget.ScrollView;
 
 import com.isseiaoki.simplecropview.CropImageView;
 import com.loopj.android.http.AsyncHttpClient;
@@ -67,8 +68,11 @@ public class CameraActivityFragment extends Fragment {
     Button saveButton;
     Button discardButton;
     Button captureButton;
+    Button analyzeBill;
     String rs;
-    TextView ocrResult;
+    EditText ocrResult;
+    private String ScanType;
+
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -147,11 +151,6 @@ public class CameraActivityFragment extends Fragment {
     };
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.e(LOG_TAG, "onCreateView() called");
@@ -161,6 +160,8 @@ public class CameraActivityFragment extends Fragment {
         saveButton.setVisibility(View.INVISIBLE);
         discardButton = (Button) rootView.findViewById(R.id.discard_button);
         discardButton.setVisibility(View.INVISIBLE);
+        analyzeBill = (Button)rootView.findViewById(R.id.bill_analyze);
+        analyzeBill.setVisibility(View.INVISIBLE);
         Toolbar plz = (Toolbar) getActivity().findViewById(R.id.toolbar);
         if (plz != null) {
             plz.setVisibility(View.GONE);
@@ -305,8 +306,9 @@ public class CameraActivityFragment extends Fragment {
                 Bitmap croppedImage = cropImageView.getCroppedBitmap();
                 cropImageView.setCropEnabled(false);
                 cropImageView.setImageBitmap(croppedImage);
-                cropButton.setText("Analyze");
+                cropButton.setText("Document");
                 cropButton.setOnClickListener(null);
+                addAnalyzeBillButton();
                 changeCropButton(cropButton, croppedImage);
 
             }
@@ -329,19 +331,33 @@ public class CameraActivityFragment extends Fragment {
         analyzeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ocrResult = new TextView(getActivity());
+                ocrResult = new EditText(getActivity());
                 discardButton.setVisibility(View.INVISIBLE);
                 analyzeButton.setVisibility(View.INVISIBLE);
+                analyzeBill.setVisibility(View.INVISIBLE);
+                ScanType = "Document";
                 scanImage(croppedImage);
                 preview.removeView(imageView);
                 FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
                 ocrResult.setGravity(Gravity.CENTER);
                 ocrResult.setLayoutParams(lp);
                 ocrResult.setVisibility(View.VISIBLE);
-                ocrResult.setTextSize(8);
-                preview.addView(ocrResult);
+                ocrResult.setTextSize(15);
+                ScrollView scrollView = new ScrollView(getActivity());
+                scrollView.addView(ocrResult);
+                preview.addView(scrollView);
                 analyzeButton.setOnClickListener(null);
 
+
+            }
+        });
+    }
+    private void addAnalyzeBillButton() {
+        analyzeBill.setVisibility(View.VISIBLE);
+        analyzeBill.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ScanType="Bill";//scanBill
             }
         });
     }
@@ -410,7 +426,7 @@ public class CameraActivityFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         saveToExternalStorage(bitmap);
-                        startLoginActivity(rs);
+                        startLoginActivity(ocrResult.getText().toString(),ScanType);
                     }
                 });
             }
@@ -475,10 +491,11 @@ public class CameraActivityFragment extends Fragment {
         }
     }
 
-    public void startLoginActivity(String s) {
+    public void startLoginActivity(String s, String scanType) {
         Intent intent = new Intent(getActivity(), SignInActivityWithDrive.class);
         intent.putExtra(Intent.EXTRA_TEXT, s);
         intent.putExtra("Parent Activity", CameraActivity.class.getSimpleName());
+        intent.putExtra("Type",ScanType);
         startActivity(intent);
     }
 

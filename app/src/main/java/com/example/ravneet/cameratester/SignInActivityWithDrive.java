@@ -138,7 +138,10 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
             updateUI(true);
             if(getIntent().getStringExtra("Parent Activity").equals(CameraActivity.class.getSimpleName())) {
                 Intent intent = new Intent(this, DriveSaveActivity.class);
+                intent.putExtra(Intent.EXTRA_TEXT,getIntent().getStringExtra(Intent.EXTRA_TEXT));
+                intent.putExtra("Type",getIntent().getStringExtra("Type"));
                 startActivity(intent);
+
             }
         } else {
             // Signed out, show unauthenticated UI.
