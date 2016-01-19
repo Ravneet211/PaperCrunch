@@ -167,6 +167,7 @@ public class CameraActivityFragment extends Fragment {
             plz.setVisibility(View.GONE);
         }
         if(mCamera == null) {
+            releaseCameraAndPreview();
             mCamera = getCameraInstance();
             mCamera.setDisplayOrientation(90);
             if(mPreview != null) {
@@ -410,6 +411,7 @@ public class CameraActivityFragment extends Fragment {
                     rs = new String(responseBody, "UTF-8");// success
                     rs = analyzeJSONString(rs);
                     ocrResult.setText(rs);
+                    Log.e(LOG_TAG, ocrResult.getText().toString().trim());
                 } catch (Exception e) {
                     Log.v(LOG_TAG, e.toString());
                 }
@@ -426,7 +428,7 @@ public class CameraActivityFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         saveToExternalStorage(bitmap);
-                        startLoginActivity(ocrResult.getText().toString(),ScanType);
+                        startLoginActivity(ocrResult.getText().toString().trim(),ScanType);
                     }
                 });
             }
@@ -520,6 +522,7 @@ public class CameraActivityFragment extends Fragment {
         super.onStart();
         Log.e(LOG_TAG, "onStart() called");
         if (mCamera == null) {
+            getActivity().recreate();
             Log.e(LOG_TAG, "onStart() camera null");
             mCamera = getCameraInstance();
             mCamera.setDisplayOrientation(90);
@@ -527,6 +530,9 @@ public class CameraActivityFragment extends Fragment {
                 mPreview = new CameraPreview(getActivity(), mCamera);
                 preview = (FrameLayout) rootView.findViewById(R.id.camera_preview);
                 preview.addView(mPreview);
+                /*captureButton.setVisibility(View.VISIBLE);
+                discardButton.setVisibility(View.INVISIBLE);
+                saveButton.setVisibility(View.INVISIBLE);*/
                 mPreview.setTag("Surface");
             }
         }

@@ -15,17 +15,27 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
+import com.google.android.gms.drive.DriveContents;
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveFolder;
+import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataBuffer;
 import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.drive.metadata.CustomPropertyKey;
 import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class DriveSaveActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
@@ -35,7 +45,9 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
     private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private final Activity activityReference = this;
+    public static CustomPropertyKey customPropertyKey = new CustomPropertyKey("timestamp",CustomPropertyKey.PUBLIC);
     ProgressDialog savingDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -129,12 +141,23 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
         Log.i(TAG, "Creating new contents.");
         final Bitmap image = mBitmapToSave;
 
-        DriveFolder appFolder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
+        final DriveFolder appFolder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
         if (appFolder != null) {
             Log.e(TAG, appFolder.toString());
         }
-        createFoldersIfNotCreated(appFolder);
-
+        new Thread() {
+            public void run() {
+                createFoldersIfNotCreated(appFolder);
+            }
+        }.start();
+//        new Thread() {
+//            public void run() {
+//                createFoldersIfNotCreated(appFolder);
+//            }
+//        }.start();
+//        savingDialog.dismiss();
+//        Intent intent = new Intent(this,HomeActivity.class);
+//        startActivity(intent);
 
 //        Drive.DriveApi.newDriveContents(mGoogleApiClient)
 //                .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
@@ -200,7 +223,7 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
     }
 
 
-    final private ResultCallback<DriveFolder.DriveFileResult> fileCallback = new
+   /* final private ResultCallback<DriveFolder.DriveFileResult> fileCallback = new
             ResultCallback<DriveFolder.DriveFileResult>() {
                 @Override
                 public void onResult(DriveFolder.DriveFileResult result) {
@@ -215,13 +238,13 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 }
-            };
+            };*/
 
 
 
     public void createFoldersIfNotCreated(final DriveFolder appFolder) {
         Query receiptsQuery = new Query.Builder()
-                .addFilter(Filters.eq(SearchableField.TITLE, "Receipts"))
+                .addFilter(Filters.eq(SearchableField.TITLE, "OCRReceipts2"))
                 .build();
         appFolder.queryChildren(mGoogleApiClient,receiptsQuery).setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
             @Override
@@ -230,12 +253,15 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
                     // Iterate over the matching Metadata instances in mdResultSet
                     if (!result.getStatus().isSuccess()) {
                         Log.v(TAG, "Problem while trying to fetch metadata.");
+                        endActivity();
                         return;
                     }
 
                 MetadataBuffer metadataBuffer = result.getMetadataBuffer();
+                String data = getIntent().getStringExtra(Intent.EXTRA_TEXT);
                 if(metadataBuffer == null) {
                     Log.e(TAG,"As Expected");
+                    endActivity();
                 }
                 if (metadataBuffer != null ) {
                     if(metadataBuffer.getCount() == 0) {
@@ -244,6 +270,10 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
                     for (Metadata md : metadataBuffer) {
                         if(md != null && md.isDataValid())
                             Log.e(TAG,md.toString());
+                            String type = getIntent().getStringExtra("Type");
+                            if(type.equals("Receipt")) {
+                                saveDataToFolder(data,"OCRReceipts2");
+                            }
 
                     }
                 }
@@ -254,7 +284,7 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
         });
 
         Query documentsQuery = new Query.Builder()
-                .addFilter(Filters.eq(SearchableField.TITLE, "Documents"))
+                .addFilter(Filters.eq(SearchableField.TITLE, "OCRDocuments2"))
                 .build();
         appFolder.queryChildren(mGoogleApiClient,documentsQuery).setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
             @Override
@@ -263,9 +293,10 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
                 // Iterate over the matching Metadata instances in mdResultSet
                 if (!result.getStatus().isSuccess()) {
                     Log.v(TAG, "Problem while trying to fetch metadata.");
+                    endActivity();
                     return;
                 }
-
+                String data = getIntent().getStringExtra(Intent.EXTRA_TEXT);
                 MetadataBuffer metadataBuffer = result.getMetadataBuffer();
                 if(metadataBuffer == null) {
                     Log.e(TAG,"As Expected");
@@ -277,6 +308,10 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
                     for (Metadata md : metadataBuffer) {
                         if(md != null && md.isDataValid())
                             Log.e(TAG,md.toString());
+                            String type = getIntent().getStringExtra("Type");
+                            if(type.equals("Document")) {
+                                saveDataToFolder(data,"OCRDocuments2");
+                            }
 
                     }
                 }
@@ -290,15 +325,17 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
 
     private void createRecieptsFolder(final DriveFolder appFolder) {
         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                .setTitle("Receipts").build();
+                .setTitle("OCRReceipts2").build();
         appFolder.createFolder(mGoogleApiClient, changeSet).setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
             @Override
             public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
                 if(driveFolderResult.getStatus().isSuccess()) {
                     Log.e(TAG, "Receipts folder created");
+                    saveDataToFolder(getIntent().getStringExtra(Intent.EXTRA_TEXT), "OCRReceipts2");
                 }
                 else {
-                    Log.e(TAG,"Uh Oh! Problem creating Receipts folder");
+                    Log.e(TAG, "Uh Oh! Problem creating Receipts folder");
+                    endActivity();
                 }
             }
         });
@@ -308,20 +345,196 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
 
     private void createDocumentsFolder(final DriveFolder appFolder) {
         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                .setTitle("Documents").build();
+                .setTitle("OCRDocuments2").build();
         appFolder.createFolder(mGoogleApiClient, changeSet).setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
             @Override
             public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
                 if(driveFolderResult.getStatus().isSuccess()) {
                     Log.e(TAG, "Documents folder created");
+                    saveDataToFolder(getIntent().getStringExtra(Intent.EXTRA_TEXT), "OCRDocuments2");
                 }
                 else {
                     Log.e(TAG,"Uh Oh! Problem creating Documents folder");
+                    endActivity();
+                }
+            }
+        });
+    }
+    public void saveDataToFolder(final String data, final String folderName) {
+        DriveFolder rootFolder;
+        if (folderName == "OCRDocuments2") {
+            rootFolder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
+        } else {
+            rootFolder = Drive.DriveApi.getAppFolder(mGoogleApiClient);
+        }
+        Query query = new Query.Builder()
+                .addFilter(Filters.eq(SearchableField.TITLE, folderName))
+                .build();
+        rootFolder.queryChildren(mGoogleApiClient, query).setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
+            @Override
+            public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
+                if (!metadataBufferResult.getStatus().isSuccess()) {
+                    Log.v(TAG, "Problem while trying to fetch metadata.");
+                    endActivity();
+                    return;
+                }
+
+                MetadataBuffer metadataBuffer = metadataBufferResult.getMetadataBuffer();
+                if (metadataBuffer == null) {
+                    Log.e(TAG, "Error: metaDataBuffer Null");
+                }
+                if (metadataBuffer != null) {
+                    for (Metadata md : metadataBuffer) {
+                        if (md != null && md.isDataValid()) {
+                            DriveId folderID = md.getDriveId();
+                            writeResultToFolder(folderName,data,folderID);
+                        }
+
+                    }
+                }
+                if (metadataBuffer != null) {
+                    metadataBuffer.close();
                 }
             }
         });
     }
 
+    private void writeResultToFolder(String folderName,String data, DriveId folderID) {
+        final DriveFolder driveFolder = Drive.DriveApi.getFolder(mGoogleApiClient, folderID);
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        MetadataChangeSet changeSet;
+        MetadataChangeSet imageChangeSet;
+        if(folderName == "OCRDocuments2") {
+             changeSet = new MetadataChangeSet.Builder()
+                    .setTitle("OCRdoc"+timeStamp)
+                    .setMimeType("application/msword").setCustomProperty(customPropertyKey,timeStamp).build();
+             imageChangeSet = new MetadataChangeSet.Builder()
+                     .setMimeType("image/jpeg").setTitle("OCRDOCpic"+timeStamp+".jpg").setCustomProperty(customPropertyKey,timeStamp).build();
+        }
+        else {
+            changeSet = new MetadataChangeSet.Builder()
+                    .setTitle("OCRBill"+timeStamp)
+                    .setMimeType("text/plain").setCustomProperty(customPropertyKey,timeStamp).build();
+            imageChangeSet = new MetadataChangeSet.Builder()
+                    .setMimeType("image/jpeg").setTitle("OCRBILLpic" + timeStamp + ".jpg").setCustomProperty(customPropertyKey,timeStamp).build();
 
+        }
+        driveFolder.createFile(mGoogleApiClient, changeSet, null).setResultCallback(new ResultCallback<DriveFolder.DriveFileResult>() {
+            @Override
+            public void onResult(DriveFolder.DriveFileResult driveFileResult) {
+                if (!driveFileResult.getStatus().isSuccess()) {
+                    Log.e(TAG, "Error Creating txt file");
+                } else {
+                    Log.e(TAG, "Created txt file");
+                    writeDataToFile(getIntent().getStringExtra(Intent.EXTRA_TEXT), driveFileResult.getDriveFile().getDriveId());
+                }
+            }
+        });
+        driveFolder.createFile(mGoogleApiClient, imageChangeSet, null).setResultCallback(new ResultCallback<DriveFolder.DriveFileResult>() {
+            @Override
+            public void onResult(DriveFolder.DriveFileResult driveFileResult) {
+                if(!driveFileResult.getStatus().isSuccess()) {
+                    Log.e(TAG,"Error Creating image file");
+                }
+                else {
+                    Log.e(TAG, "Created image file");
+                    writeImageToFile(mBitmapToSave, driveFileResult.getDriveFile().getDriveId());
+                }
+            }
+        });
+    }
+    public void endActivity() {
+        savingDialog.dismiss();
+        Intent intent = new Intent(activityReference,HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+    public void writeDataToFile(final String s,DriveId driveId) {
+        DriveFile driveFile = Drive.DriveApi.getFile(mGoogleApiClient,driveId);
+        driveFile.open(mGoogleApiClient, DriveFile.MODE_WRITE_ONLY, null).setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
+            @Override
+            public void onResult(final DriveApi.DriveContentsResult result) {
+                if (!result.getStatus().isSuccess()) {
+                    Log.e(TAG, "Error opening created file");// Handle error
+                    return;
+                }
+                DriveContents driveContents = result.getDriveContents();
+                Log.e(TAG, driveContents.toString());
+                try {
+                    /*ParcelFileDescriptor parcelFileDescriptor = driveContents.getParcelFileDescriptor();
+                    FileInputStream fileInputStream = new FileInputStream(parcelFileDescriptor
+                            .getFileDescriptor());
+                    // Read to the end of the file.
+                    fileInputStream.read(new byte[fileInputStream.available()]);
 
+                    // Append to the file.
+                    FileOutputStream fileOutputStream = new FileOutputStream(parcelFileDescriptor
+                            .getFileDescriptor());
+                    Writer writer = new OutputStreamWriter(fileOutputStream);
+                    writer.write(s);
+                    driveContents.commit(mGoogleApiClient, null).setResultCallback(
+                            new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(Status status) {
+                                    if (status.isSuccess()) {
+                                        Log.e(TAG,"Written to file successfully");
+                                        endActivity();
+                                    }
+                                    else {
+                                        Log.e(TAG,"File Write Failed");
+                                    }
+                                }
+                            }
+                    );*/
+                    OutputStream outputStream = driveContents.getOutputStream();
+                    outputStream.write(s.getBytes());
+                    driveContents.commit(mGoogleApiClient, null).setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                Log.e(TAG, "Written to file successfully");
+                            } else {
+                                Log.e(TAG, "Error writing to file");
+                            }
+                        }
+                    });
+                } catch (IOException e) {
+                    Log.e(TAG, "Error with OutputStream");
+                }
+
+            }
+        });
+
+    }
+    public void writeImageToFile(final Bitmap bitmap,DriveId driveID) {
+        DriveFile driveFile = Drive.DriveApi.getFile(mGoogleApiClient, driveID);
+        driveFile.open(mGoogleApiClient, DriveFile.MODE_WRITE_ONLY, null).setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
+            @Override
+            public void onResult(final DriveApi.DriveContentsResult result) {
+                if (!result.getStatus().isSuccess()) {
+                    Log.e(TAG, "Error opening created file");// Handle error
+                    return;
+                }
+                DriveContents driveContents = result.getDriveContents();
+                Log.e(TAG, driveContents.toString());
+                OutputStream outputStream = driveContents.getOutputStream();
+                ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bitmapStream);
+                try {
+                    outputStream.write(bitmapStream.toByteArray());
+                    driveContents.commit(mGoogleApiClient,null).setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            Log.e(TAG,"Image write successful:" + Boolean.toString(status.isSuccess()));
+                            endActivity();
+                        }
+                    });
+                } catch (IOException e) {
+                    Log.e(TAG, e.toString());
+                    endActivity();
+                }
+            }
+
+        });
+    }
 }

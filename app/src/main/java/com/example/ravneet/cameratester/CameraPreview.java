@@ -133,24 +133,28 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
-        Camera.Parameters params = mCamera.getParameters();
-        int action = motionEvent.getAction();
+        if(mCamera != null) {
+            Camera.Parameters params = mCamera.getParameters();
 
-        if (motionEvent.getPointerCount() > 1) {
-            // handle multi-touch events
-            if (action == MotionEvent.ACTION_POINTER_DOWN) {
-                mDist = getFingerSpacing(motionEvent);
-            } else if (action == MotionEvent.ACTION_MOVE && params.isZoomSupported()) {
-                //mCamera.cancelAutoFocus();
-                handleZoom(motionEvent, params);
+            int action = motionEvent.getAction();
+
+            if (motionEvent.getPointerCount() > 1) {
+                // handle multi-touch events
+                if (action == MotionEvent.ACTION_POINTER_DOWN) {
+                    mDist = getFingerSpacing(motionEvent);
+                } else if (action == MotionEvent.ACTION_MOVE && params.isZoomSupported()) {
+                    //mCamera.cancelAutoFocus();
+                    handleZoom(motionEvent, params);
+                }
+            } else {
+                // handle single touch events
+                if (action == MotionEvent.ACTION_UP) {
+                    //handleFocus(event, params);
+                }
             }
-        } else {
-            // handle single touch events
-            if (action == MotionEvent.ACTION_UP) {
-                //handleFocus(event, params);
-            }
+            return true;
         }
-        return true;
+        return false;
     }
     private void handleZoom(MotionEvent event, Camera.Parameters params) {
         int maxZoom = params.getMaxZoom();

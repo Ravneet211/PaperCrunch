@@ -179,7 +179,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
             }
             Log.e(LOG_TAG,personName);
             Log.v(LOG_TAG, account.getEmail());
-            Log.v(LOG_TAG,personId);
+            Log.v(LOG_TAG, personId);
         }
         else {
             Intent signInIntent = new Intent(this,SignInActivityWithDrive.class);
@@ -188,6 +188,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
 
         }
     }
+
     @Override
     public void onConnectionFailed(ConnectionResult result) {
         Log.v(LOG_TAG,result.toString());
