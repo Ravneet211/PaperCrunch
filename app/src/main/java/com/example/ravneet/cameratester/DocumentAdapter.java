@@ -1,10 +1,13 @@
 package com.example.ravneet.cameratester;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +16,12 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveId;
+import com.google.android.gms.drive.DriveResource;
+import com.google.android.gms.drive.Metadata;
 
 import java.util.ArrayList;
 
@@ -25,7 +33,7 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
     private Context c;
     private String LOG_TAG = DocumentAdapter.class.getSimpleName();
     private GoogleApiClient mGoogleApiClient;
-    private ArrayList<String> documentLinks;
+    private ArrayList<DriveId> documentLinks;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -40,10 +48,10 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public DocumentAdapter(Context context, ArrayList<DriveId> myDataset,GoogleApiClient googleApiClient,ArrayList<String> docLinks) {
+    public DocumentAdapter(Context context, ArrayList<DriveId> myDataset,GoogleApiClient googleApiClient,ArrayList<DriveId> docLinks) {
         mDataset = myDataset;
         c = context;
-        mGoogleApiClient = googleApiClient;
+        mGoogleApiClient = googleApiClient;// ensure that this doesn't fail
         documentLinks = docLinks;
     }
 
@@ -71,19 +79,31 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             @Override
             public void onClick(View v) {
                 if(documentLinks.size() > position) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW);
-                    browserIntent.setData(Uri.parse(documentLinks.get(position)));
-                    c.startActivity(browserIntent);
+                    final Intent browserIntent = new Intent(Intent.ACTION_VIEW);
+                    DriveId docDriveId = documentLinks.get(position);
+                    DriveFile docFile = docDriveId.asDriveFile();
+                    docFile.getMetadata(mGoogleApiClient).setResultCallback(new ResultCallback<DriveResource.MetadataResult>() {
+                        @Override
+                        public void onResult(DriveResource.MetadataResult metadataResult) {
+                            if (metadataResult != null) {
+                                Metadata md = metadataResult.getMetadata();
+                                browserIntent.setData(Uri.parse(md.getAlternateLink()));
+                                c.startActivity(browserIntent);
+                            }
+                        }
+                    });
                 }
             }
         });
         final TextView viewImage = (TextView)holder.mCardView.findViewById(R.id.view_image);
-        /*viewImage.setOnClickListener(new View.OnClickListener() {
+        viewImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Open Image View Activity
+                Intent intent = new Intent(c,ImageDisplayActivity.class);
+                intent.putExtra(Intent.EXTRA_TEXT,mDataset.get(position).encodeToString());
+                c.startActivity(intent);//Open Image View Activity
             }
-        });*/ // set value in DocumentFragment
+        });
         /*DriveFile driveFile = Drive.DriveApi.getFile(mGoogleApiClient, mDataset.get(position));
         driveFile.open(mGoogleApiClient, DriveFile.MODE_READ_ONLY, null)
                 .setResultCallback(
@@ -107,6 +127,47 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
                             }
                         });*/
         //Picasso.with(c).load(Uri.parse("https://drive.google.com/uc?export=view&id="+mDataset.get(position))).into(docImage);
+        ImageView deleteButton = (ImageView) holder.mCardView.findViewById(R.id.delete_icon);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(c);
+                alertDialogBuilder.setMessage(R.string.dialog_message)
+                        .setTitle(R.string.dialog_title).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(mGoogleApiClient.isConnected()) {
+                            DriveFile imageFile = mDataset.get(position).asDriveFile();
+                            imageFile.delete(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(Status status) {
+                                    if(status.isSuccess()) {
+                                        mDataset.remove(position);
+                                        documentLinks.get(position).asDriveFile().delete(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
+                                            @Override
+                                            public void onResult(Status status) {
+                                                if(status.isSuccess()) {
+                                                    documentLinks.remove(position);
+                                                    Log.e(LOG_TAG,"Doc file deleted");
+                                                    notifyDataSetChanged();
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
+                //Drive.DriveApi.getFile(mGoogleApiClient,mDataset.get(position)).delete(mGoogleApiClient);
+            }
+        });
         Glide.with(c)
                 .from(DriveId.class)
                 .load(mDataset.get(position))

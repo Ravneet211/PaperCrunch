@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,7 +61,7 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    ArrayList<String> docLinks = new ArrayList<String>();
+    ArrayList<DriveId> docLinks = new ArrayList<DriveId>();
 
 
     private OnFragmentInteractionListener mListener;
@@ -98,7 +99,9 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
     @Override
     public void onConnected(Bundle connectionHint) {
         Log.e(LOG_TAG, "Successful YAYY!");
-        progressDialog = new ProgressDialog(getActivity());
+        if(progressDialog == null) {
+            progressDialog = new ProgressDialog(getActivity());
+        }
         progressDialog.show();
         DocumentRetrieve documentRetrieve = new DocumentRetrieve();
         documentRetrieve.execute(rootView);
@@ -217,7 +220,7 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
             }
             timeStamps = generateArrayList(documentsFolder);
 
-            Log.e(LOG_TAG, timeStamps.toString());
+            Log.e(LOG_TAG, "Images: " + timeStamps.toString());
             return null;
         }
 
@@ -231,7 +234,9 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
             progressDialog.dismiss();
             mAdapter = new DocumentAdapter(getActivity(),timeStamps,mGoogleApiClient,docLinks);
             mRecyclerView.setAdapter(mAdapter);
-            Log.e(LOG_TAG,docLinks.toString());
+            Toolbar plz = (Toolbar)getActivity().findViewById(R.id.toolbar);
+            mRecyclerView.setPadding(0,plz.getHeight(),0,0);
+            Log.e(LOG_TAG,"DocLinks:" + docLinks.toString());
         }
         public ArrayList<DriveId> generateArrayList(DriveFolder documentsFolder) {
             ArrayList<DriveId> temp = new ArrayList<DriveId>();
@@ -262,8 +267,8 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
                                 MetadataBuffer documentBuffer = documentsFolder.queryChildren(mGoogleApiClient,doclinksQuery).await().getMetadataBuffer();
                                 if(documentBuffer != null) {
                                     for (Metadata md2 : documentBuffer) {
-                                        if(md2.getAlternateLink() != null) {
-                                            docLinks.add(md2.getAlternateLink());
+                                        if(md2.getAlternateLink() != null && !md2.isTrashed()) {
+                                            docLinks.add(md2.getDriveId());
                                         }
                                     }
                                 }
@@ -273,15 +278,10 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
 
 
                     }
-//                    Log.e(LOG_TAG, md.getDriveId().encodeToString());
-//                    Log.e(LOG_TAG,md.getDriveId().toString());
-//                    Log.e(LOG_TAG,md.getDriveId().toInvariantString());
-//                    Log.e(LOG_TAG,md.getAlternateLink());
+//
 
                 }
             }
-            //Log.e(LOG_TAG,docLinks.toString());
-            Log.e(LOG_TAG,docLinks.toString());
             return temp;
         }
         public String extractFileID(String s) {

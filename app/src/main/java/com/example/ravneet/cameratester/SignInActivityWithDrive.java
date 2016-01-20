@@ -1,8 +1,10 @@
 package com.example.ravneet.cameratester;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -40,6 +42,7 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
     private TextView mStatusTextView;
     private ProgressDialog mProgressDialog;
+    private boolean done = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +90,6 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
         signInButton.setScopes(gso.getScopeArray());
         // [END customize_button]
     }
-
     @Override
     public void onStart() {
         super.onStart();
@@ -142,6 +144,29 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
                 intent.putExtra("Type",getIntent().getStringExtra("Type"));
                 startActivity(intent);
 
+            }
+            else if(getIntent().getStringExtra("Parent Activity").equals(HomeActivity.class.getSimpleName()) && !done) {
+               //do nothing
+               String type = getIntent().getStringExtra("Action");
+                if(type.equals("Logout")) {
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    alertDialogBuilder.setTitle("Sign out");
+                    alertDialogBuilder.setMessage("Are you sure you want to sign out?");
+                    alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            signOut();
+                            done = true;
+                        }
+                    });
+                    AlertDialog alertDialog = alertDialogBuilder.create();
+                    alertDialog.show();
+                }
+            }
+            else {
+                Intent intent = new Intent(this,HomeActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
             }
         } else {
             // Signed out, show unauthenticated UI.

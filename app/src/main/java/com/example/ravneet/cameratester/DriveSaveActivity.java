@@ -526,6 +526,7 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
                         @Override
                         public void onResult(Status status) {
                             Log.e(TAG,"Image write successful:" + Boolean.toString(status.isSuccess()));
+                            deleteFromExternalStorage();
                             endActivity();
                         }
                     });
@@ -536,5 +537,13 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
             }
 
         });
+    }
+    public void deleteFromExternalStorage() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"MyCameraApp");
+        File imageFile = new File(mediaStorageDir.getPath()+File.separator+"receipt.jpg");
+        boolean deleted = imageFile.delete();
+        if(deleted) {
+            Log.e(TAG,"Deleted from external storage");
+        }
     }
 }

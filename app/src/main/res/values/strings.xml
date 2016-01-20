@@ -21,7 +21,7 @@
     <string name="signed_in_fmt">Signed in as: %s</string>
     <string name="signed_in">Signed in</string>
     <string name="signing_in">Signing in…</string>
-    <string name="signed_out">Signed out</string>
+    <string name="signed_out">Signed out: Please Sign In To Continue!</string>
     <string name="signed_in_err">"Error: please check logs."</string>
     <string name="error_null_person">
         Error: Plus.PeopleApi.getCurrentPerson returned null. Ensure that the Google+ API is
@@ -71,4 +71,8 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="view_image">Image</string>
     <string name="view_doc">Document</string>
+    <string name="title_activity_image_display">ImageDisplayActivity</string>
+    <string name="dialog_message">Are you sure you want to delete the processed image? This action cannot be undone!</string>
+    <string name="dialog_title">Delete Processed Image</string>
+
 </resources>

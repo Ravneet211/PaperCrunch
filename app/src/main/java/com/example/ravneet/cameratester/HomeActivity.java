@@ -87,6 +87,8 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
                 if (position == 2) {
                     Intent intent = new Intent(activityWeakReference.get(), SignInActivityWithDrive.class);
                     intent.putExtra("Parent Activity", LOG_TAG);
+                    intent.putExtra("Action","Logout");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 }
                 l.setItemChecked(position, true);
@@ -184,6 +186,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
         else {
             Intent signInIntent = new Intent(this,SignInActivityWithDrive.class);
             signInIntent.putExtra("Parent Activity",LOG_TAG);
+            signInIntent.putExtra("Action","Login");
             startActivity(signInIntent);
 
         }

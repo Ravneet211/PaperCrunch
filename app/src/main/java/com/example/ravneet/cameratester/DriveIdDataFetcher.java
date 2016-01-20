@@ -26,6 +26,7 @@ public class DriveIdDataFetcher implements DataFetcher<InputStream> {
 
     private boolean cancelled = false;
 
+
     private DriveFile file;
     private DriveContents contents;
 

@@ -11,39 +11,81 @@
         android:padding="0dp"
         >
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:layout_width="76dp"
+            android:layout_height="76dp"
             android:id="@+id/button_capture"
             android:layout_gravity="center_horizontal|bottom"
             android:layout_alignParentTop="true"
-            android:text="Capture"
+            android:src="@drawable/camera_icon"
             android:gravity="center"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="6dp" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Crop"
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_crop_free_white_24dp"
             android:id="@+id/crop_button"
             android:layout_gravity="right|top"
             android:layout_margin="10dp" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Discard"
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_cancel_white_24dp"
             android:id="@+id/discard_button"
             android:layout_gravity="left|top"
             android:layout_margin="10dp" />
+        <LinearLayout
+            android:layout_width="84dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center_horizontal|top"
+            android:layout_marginTop="10dp"
+            android:id="@+id/receipt_instruction_container">
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/ic_receipt_black_24dp"
+                android:id="@+id/bill_analyze"
+                android:layout_marginLeft="10dp" />
+            <TextView
+                android:layout_width="84dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="#000000"
+                android:id="@+id/receipt_scan_instruction" />
+        </LinearLayout>
 
-        <Button
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="BILL"
-            android:id="@+id/bill_analyze"
-            android:layout_gravity="center_horizontal|top"
-            android:layout_marginTop="10dp" />
+            android:text="Discard"
+            android:id="@+id/discard_instruction"
+            android:layout_gravity="left|top"
+            android:textColor="#ffffff"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="70dp"
+            android:layout_marginLeft="10dp"
+            android:gravity="center"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/crop_instruction"
+            android:layout_gravity="right|top"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="70dp"
+            android:textColor="#ffffff"
+            android:text="Crop"
+            android:gravity="center"
+            android:textStyle="bold" />
+
+
     </FrameLayout>
 
 </RelativeLayout>
