@@ -97,8 +97,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="play-services-base-8.4.0" level="project" />
     <orderEntry type="library" exported="" name="design-23.1.1" level="project" />
-    <orderEntry type="library" exported="" name="javacv-1.1" level="project" />
     <orderEntry type="library" exported="" name="videoinput-0.200-1.1" level="project" />
+    <orderEntry type="library" exported="" name="javacv-1.1" level="project" />
     <orderEntry type="library" exported="" name="opencv-3.0.0-1.1-android-x86" level="project" />
     <orderEntry type="library" exported="" name="picasso-2.5.2" level="project" />
     <orderEntry type="library" exported="" name="libdc1394-2.2.3-1.1" level="project" />
