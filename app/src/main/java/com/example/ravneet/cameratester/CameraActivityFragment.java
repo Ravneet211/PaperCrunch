@@ -648,7 +648,7 @@ public class CameraActivityFragment extends Fragment {
         }
         return pictureFile;
     }
-    public void scanBitmaps(final ArrayList<Bitmap> bitmaps, final int i, final ProgressDialog progressDialog, final LinearLayout l, final HashSet<Integer> checkedBoxes) {
+    public void scanBitmaps(final ArrayList<Bitmap> bitmaps, final int i, final ProgressDialog progressDialog, final LinearLayout l, final HashSet<Integer> checkedBoxes,final int checkBoxes) {
         if(i >= bitmaps.size()) {
             return;
         }
@@ -664,7 +664,7 @@ public class CameraActivityFragment extends Fragment {
         }
         params.put("language", "eng");
         client.post("https://api.ocr.space/parse/image", params, new AsyncHttpResponseHandler() {
-
+            int updatedCheckBoxes = checkBoxes;
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
                 // error handling
@@ -682,6 +682,7 @@ public class CameraActivityFragment extends Fragment {
 
                     }
                     else {
+                        updatedCheckBoxes+=1;
                         ArrayList<String> itemAndPrice = extractItemAndPrice(rs);
                         Log.e(LOG_TAG, itemAndPrice.toString());
                         LinearLayout priceItemLayout = new LinearLayout(getActivity());
@@ -694,11 +695,11 @@ public class CameraActivityFragment extends Fragment {
                             @Override
                             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                                 if(isChecked) {
-                                    checkedBoxes.add(i+1);
+                                    checkedBoxes.add(updatedCheckBoxes);
                                 }
                                 else {
-                                    if(checkedBoxes.contains(i+1)) {
-                                        checkedBoxes.remove(i+1);
+                                    if(checkedBoxes.contains(updatedCheckBoxes)) {
+                                        checkedBoxes.remove(updatedCheckBoxes);
                                     }
                                 }
                             }
@@ -743,11 +744,14 @@ public class CameraActivityFragment extends Fragment {
             public void onFinish() {
                 if(i == bitmaps.size()-1) {
                     progressDialog.dismiss();
+                    Button addButton = new Button(getActivity());
+                    addButton.setText("Add field");
+                    l.addView(addButton);
                 }
                 discardButton.setVisibility(View.VISIBLE);
                 discardInstruction.setVisibility(View.VISIBLE);
                 deleteFromInternalStorage();
-                scanBitmaps(bitmaps, i + 1, progressDialog, l, checkedBoxes);
+                scanBitmaps(bitmaps, i + 1, progressDialog, l, checkedBoxes,updatedCheckBoxes);
             }
 
             @Override
@@ -756,6 +760,8 @@ public class CameraActivityFragment extends Fragment {
                     /*progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                     progressDialog.setTitle("Analyzing");
                     progressDialog.show();*/
+                    LinearLayout buttonLayout = new LinearLayout(getActivity());
+                    buttonLayout.setWeightSum(3);
                     Button mergeButton = new Button(getActivity());
                     mergeButton.setText("Merge");
                     mergeButton.setOnClickListener(new View.OnClickListener() {
@@ -766,7 +772,7 @@ public class CameraActivityFragment extends Fragment {
 
                             } else {
                                 ArrayList<Integer> selectedBoxes = generateOrderedList(checkedBoxes);//get the position of all checked boxes
-                                Log.e(LOG_TAG,selectedBoxes.toString());
+                                Log.e(LOG_TAG, selectedBoxes.toString());
                                 boolean properFieldSeen = false;
                                 boolean invalid = false;
                                 StringBuilder item = new StringBuilder("");
@@ -776,11 +782,11 @@ public class CameraActivityFragment extends Fragment {
                                     EditText e = (EditText) itemLayout.getChildAt(1);
                                     if (properFieldSeen) {
                                         if (itemLayout.getChildCount() == 3) {
-                                            Toast.makeText(getActivity(), "Cannot merge proper fields", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(getActivity(), "Cannot merge matched items", Toast.LENGTH_SHORT).show();
                                             invalid = true;
                                         } else {
                                             String individualItem = e.getText().toString().trim();
-                                            item.append(individualItem + " ");
+                                            item.append(" " + individualItem);
                                         }
                                     } else {
                                         if (itemLayout.getChildCount() == 3) {
@@ -808,10 +814,18 @@ public class CameraActivityFragment extends Fragment {
                                     priceEditText.setText(price);
                                     for (int i = 1; i < selectedBoxes.size(); i++) {
                                         l.removeViewAt(selectedBoxes.get(i));
+                                        for(int j = i; j < selectedBoxes.size(); j++) {
+                                            selectedBoxes.set(j,selectedBoxes.get(j)-1);
+                                        }
                                     }
-                                    checkedBoxes.clear();
-                                    checkedBoxes.add(selectedBoxes.get(0));
                                 }
+                            }
+                            checkedBoxes.clear();
+                            updatedBoxes(l);
+                            for (int i = 1; i < l.getChildCount() - 1; i++) {
+                                LinearLayout il = (LinearLayout) l.getChildAt(i);
+                                CheckBox c = (CheckBox) il.getChildAt(0);
+                                c.setChecked(false);
                             }
                         }
 
@@ -824,8 +838,25 @@ public class CameraActivityFragment extends Fragment {
                             return answer;
                         }
 
+                        public void updatedBoxes(LinearLayout l) {
+                            for (int i = 1; i < l.getChildCount() - 1; i++) {
+                                LinearLayout itemLayout = (LinearLayout) l.getChildAt(i);
+                                CheckBox c = (CheckBox) itemLayout.getChildAt(0);
+                                final int j = i;
+                                c.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                                    @Override
+                                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                        if (isChecked) {
+                                            checkedBoxes.add(j);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+
                     });
-                    l.addView(mergeButton);
+                    buttonLayout.addView(mergeButton);
+                    l.addView(buttonLayout);
                 }
                 Log.e(LOG_TAG,"On iteration: " + Integer.toString(i));
             }
@@ -948,7 +979,7 @@ public class CameraActivityFragment extends Fragment {
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                 lp.setMargins(0, 0, 0, 10);
                 //displayBitmaps(linedImages, l, lp);
-                scanBitmaps(linedImages, 0,progressDialog, l,new HashSet<Integer>());
+                scanBitmaps(linedImages, 0,progressDialog, l,new HashSet<Integer>(),0);
             }
         }
 }
