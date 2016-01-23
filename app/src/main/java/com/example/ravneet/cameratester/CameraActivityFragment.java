@@ -11,6 +11,7 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
@@ -21,6 +22,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -28,6 +32,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.isseiaoki.simplecropview.CropImageView;
 import com.loopj.android.http.AsyncHttpClient;
@@ -44,7 +49,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -326,7 +334,7 @@ public class CameraActivityFragment extends Fragment {
                 cropInstruction.setTextColor(Color.parseColor("#000000"));
                 discardButton.setImageResource(R.drawable.ic_cancel_black_48dp);
                 discardInstruction.setTextColor(Color.parseColor("#000000"));
-                addAnalyzeBillButton();
+                addAnalyzeBillButton(croppedImage);
                 changeCropButton(cropButton, croppedImage);
 
             }
@@ -376,7 +384,7 @@ public class CameraActivityFragment extends Fragment {
             }
         });
     }
-    private void addAnalyzeBillButton() {
+    private void addAnalyzeBillButton(final Bitmap croppedImage) {
         analyzeBill.setVisibility(View.VISIBLE);
         analyzeBill.bringToFront();
         receiptAnalyzeInstruction.setVisibility(View.VISIBLE);
@@ -386,7 +394,31 @@ public class CameraActivityFragment extends Fragment {
         analyzeBill.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ScanType="Bill";//scanBill
+                StringBuilder builtString = new StringBuilder("");
+                ScanType="Bill";//scanBill`
+                preview.removeAllViews();
+                ScanReceipt scanReceipt = new ScanReceipt();
+                scanReceipt.execute(croppedImage);
+                /*ProgressDialog progressDialog = new ProgressDialog(getActivity());
+                progressDialog.setTitle("Analyzing");
+                progressDialog.show();
+                final File imgPath = saveToExternalStorageString(croppedImage);
+                Log.e(GroceryLineBreakMatch.class.getSimpleName(), "Saved to External Storage");
+                ArrayList<Integer> lineBreaks = GroceryLineBreakMatch.preProcess(imgPath.getAbsolutePath(), 0);
+                ArrayList<Bitmap> linedImages = new ArrayList<Bitmap>();
+                for(int i = 0; i < lineBreaks.size()-1;i++) {
+                    linedImages.add(Bitmap.createBitmap(croppedImage,0,lineBreaks.get(i),croppedImage.getWidth(),Math.min(croppedImage.getHeight()-lineBreaks.get(i),lineBreaks.get(i+1)-lineBreaks.get(i)+15)));
+                }
+                LinearLayout l = new LinearLayout(getActivity());
+                l.setOrientation(LinearLayout.VERTICAL);
+                ScrollView s = new ScrollView(getActivity());
+                s.addView(l);
+                preview.addView(s);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(0, 0, 0, 10);
+                //displayBitmaps(linedImages, l, lp);
+                scanBitmaps(linedImages, 0,progressDialog, l,new HashSet<Integer>());*/
+
             }
         });
     }
@@ -440,10 +472,10 @@ public class CameraActivityFragment extends Fragment {
                     rs = new String(responseBody, "UTF-8");// success
                     rs = analyzeJSONString(rs);
                     ocrResult.setText(rs);
-                    if(rs.substring(0,6).equals("Error")) {
+                    Log.e(LOG_TAG,rs);
+                    if (rs.substring(0, 6).equals("Error")) {
                         eliminateSaveButton();
-                    }
-                    else {
+                    } else {
                         cropInstruction.setVisibility(View.VISIBLE);
                         saveButton.setVisibility(View.VISIBLE);
                         saveButton.setImageResource(R.drawable.ic_check_circle_black_48dp);
@@ -462,6 +494,7 @@ public class CameraActivityFragment extends Fragment {
                 }
 
             }
+
             public void eliminateSaveButton() {
                 saveButton.setVisibility(View.GONE);
                 cropInstruction.setVisibility(View.GONE);
@@ -513,7 +546,6 @@ public class CameraActivityFragment extends Fragment {
         });
         return rs;
     }
-
     public void saveToExternalStorage(Bitmap bitmap) {
         File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
         if (pictureFile == null) {
@@ -539,7 +571,7 @@ public class CameraActivityFragment extends Fragment {
         Intent intent = new Intent(getActivity(), SignInActivityWithDrive.class);
         intent.putExtra(Intent.EXTRA_TEXT, s);
         intent.putExtra("Parent Activity", CameraActivity.class.getSimpleName());
-        intent.putExtra("Type",ScanType);
+        intent.putExtra("Type", ScanType);
         startActivity(intent);
     }
 
@@ -616,5 +648,307 @@ public class CameraActivityFragment extends Fragment {
         }
         return pictureFile;
     }
+    public void scanBitmaps(final ArrayList<Bitmap> bitmaps, final int i, final ProgressDialog progressDialog, final LinearLayout l, final HashSet<Integer> checkedBoxes) {
+        if(i >= bitmaps.size()) {
+            return;
+        }
+        AsyncHttpClient client = new AsyncHttpClient(true, 80, 443);
+        RequestParams params = new RequestParams();
+        String path = saveToInternalSorage(bitmaps.get(i));
+        params.put("apikey", "helloworld");
+        final File imageFile = new File(path, "bill.jpg");
+        try {
+            params.put("file", imageFile);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, e.toString());
+        }
+        params.put("language", "eng");
+        client.post("https://api.ocr.space/parse/image", params, new AsyncHttpResponseHandler() {
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
+                // error handling
+                Log.e(LOG_TAG, "Failed for image");
+                Log.e(LOG_TAG,throwable.toString());
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                try {
+                    rs = new String(responseBody, "UTF-8");// success
+                    rs = analyzeJSONString(rs);
+                    TextView t = new TextView(getActivity());
+                    if(rs.contains("Error")) {
+
+                    }
+                    else {
+                        ArrayList<String> itemAndPrice = extractItemAndPrice(rs);
+                        Log.e(LOG_TAG, itemAndPrice.toString());
+                        LinearLayout priceItemLayout = new LinearLayout(getActivity());
+                        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                        lp.setMargins(0, 0, 0, 10);
+                        priceItemLayout.setOrientation(LinearLayout.HORIZONTAL);
+                        CheckBox c = new CheckBox(getActivity());
+                        c.setChecked(false);
+                        c.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                if(isChecked) {
+                                    checkedBoxes.add(i+1);
+                                }
+                                else {
+                                    if(checkedBoxes.contains(i+1)) {
+                                        checkedBoxes.remove(i+1);
+                                    }
+                                }
+                            }
+                        });
+                        priceItemLayout.addView(c);
+                        if(!itemAndPrice.get(0).equals("") && itemAndPrice.get(0) != null) {
+                            LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1.0f);
+                            EditText e = new EditText(getActivity());
+                            e.setBackgroundResource(R.drawable.rounded_edittext);
+                            e.setText(itemAndPrice.get(0));
+                            e.setGravity(Gravity.CENTER_HORIZONTAL);
+                            e.setLayoutParams(lp2);
+                            lp2.setMargins(0,0,dpToPx(20),0);
+                            priceItemLayout.addView(e);
+                        }
+                        if(!itemAndPrice.get(1).equals("") && itemAndPrice.get(1) != null) {
+                            EditText e = new EditText(getActivity());
+                            e.setWidth(dpToPx(50));
+                            e.setGravity(Gravity.CENTER);
+                            e.setBackgroundResource(R.drawable.rounded_edittext);
+                            e.setText(itemAndPrice.get(1));
+                            priceItemLayout.addView(e);
+                        }
+
+                        priceItemLayout.setLayoutParams(lp);
+                        l.addView(priceItemLayout);
+
+
+                       /* t.setText(rs);
+                        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                        lp.setMargins(0,0,0,10);
+                        t.setLayoutParams(lp);
+                        l.addView(t);*/
+                    }
+                }catch(Exception e) {
+                    Log.e(LOG_TAG, e.toString());
+                }
+            }
+
+
+            @Override
+            public void onFinish() {
+                if(i == bitmaps.size()-1) {
+                    progressDialog.dismiss();
+                }
+                discardButton.setVisibility(View.VISIBLE);
+                discardInstruction.setVisibility(View.VISIBLE);
+                deleteFromInternalStorage();
+                scanBitmaps(bitmaps, i + 1, progressDialog, l, checkedBoxes);
+            }
+
+            @Override
+            public void onStart() {
+                if( i == 0) {
+                    /*progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    progressDialog.setTitle("Analyzing");
+                    progressDialog.show();*/
+                    Button mergeButton = new Button(getActivity());
+                    mergeButton.setText("Merge");
+                    mergeButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (checkedBoxes.size() < 2) {
+                                Toast.makeText(getActivity(), "Please select atleast two items", Toast.LENGTH_SHORT).show();
+
+                            } else {
+                                ArrayList<Integer> selectedBoxes = generateOrderedList(checkedBoxes);//get the position of all checked boxes
+                                Log.e(LOG_TAG,selectedBoxes.toString());
+                                boolean properFieldSeen = false;
+                                boolean invalid = false;
+                                StringBuilder item = new StringBuilder("");
+                                String price = "";
+                                for (int i : selectedBoxes) {
+                                    LinearLayout itemLayout = (LinearLayout) l.getChildAt(i);
+                                    EditText e = (EditText) itemLayout.getChildAt(1);
+                                    if (properFieldSeen) {
+                                        if (itemLayout.getChildCount() == 3) {
+                                            Toast.makeText(getActivity(), "Cannot merge proper fields", Toast.LENGTH_SHORT).show();
+                                            invalid = true;
+                                        } else {
+                                            String individualItem = e.getText().toString().trim();
+                                            item.append(individualItem + " ");
+                                        }
+                                    } else {
+                                        if (itemLayout.getChildCount() == 3) {
+                                            properFieldSeen = true;
+                                            EditText priceEditText = (EditText) itemLayout.getChildAt(2);
+                                            price = priceEditText.getText().toString().trim();
+                                        }
+                                        item.append(e.getText().toString().trim());
+                                    }
+                                }
+                                if (!invalid) {
+                                    LinearLayout mergedItemLayout = (LinearLayout) l.getChildAt(selectedBoxes.get(0));
+                                    EditText itemEditText = (EditText) mergedItemLayout.getChildAt(1);
+                                    itemEditText.setText(item);
+                                    EditText priceEditText;
+                                    if (mergedItemLayout.getChildCount() == 3) {
+                                        priceEditText = (EditText) mergedItemLayout.getChildAt(2);
+                                    } else {
+                                        priceEditText = new EditText(getActivity());
+                                        priceEditText.setBackgroundResource(R.drawable.rounded_edittext);
+                                        if (!price.equals("")) {
+                                            mergedItemLayout.addView(priceEditText);
+                                        }
+                                    }
+                                    priceEditText.setText(price);
+                                    for (int i = 1; i < selectedBoxes.size(); i++) {
+                                        l.removeViewAt(selectedBoxes.get(i));
+                                    }
+                                    checkedBoxes.clear();
+                                    checkedBoxes.add(selectedBoxes.get(0));
+                                }
+                            }
+                        }
+
+                        public ArrayList<Integer> generateOrderedList(HashSet<Integer> checkedBoxes) {
+                            ArrayList<Integer> answer = new ArrayList<Integer>();
+                            for (int i : checkedBoxes) {
+                                answer.add(i);
+                            }
+                            Collections.sort(answer);
+                            return answer;
+                        }
+
+                    });
+                    l.addView(mergeButton);
+                }
+                Log.e(LOG_TAG,"On iteration: " + Integer.toString(i));
+            }
+
+            public String analyzeJSONString(String s) {
+                String response = "";
+                try {
+                    JSONObject rootObject = new JSONObject(s);
+                    boolean isError = Boolean.getBoolean(rootObject.getString("IsErroredOnProcessing"));
+                    if (isError) {
+                        String errorMessage = rootObject.getString("ErrorMessage");
+                        String errorDetails = rootObject.getString("ErrorDetails");
+                        response = "Error: " + errorMessage;
+                    } else {
+                        JSONArray parsedResults = rootObject.getJSONArray("ParsedResults");
+                        JSONObject redundantaf = parsedResults.getJSONObject(0);
+                        String parse = redundantaf.getString("ParsedText");
+                        if (!parse.equals("")) {
+                            response = parse;
+                        } else {
+                            String errorMessage = redundantaf.getString("ErrorMessage");
+                            String errorDetails = redundantaf.getString("ErrorDetails");
+                            response = "Error: " + errorMessage;
+                        }
+                    }
+
+                } catch (JSONException e) {
+                    response = "API not responding correctly.";
+                    Log.e(LOG_TAG, e.toString());
+                }
+                return response;
+            }
+        });
+    }
+    public void displayBitmaps(ArrayList<Bitmap> bitmaps, LinearLayout l, LinearLayout.LayoutParams lp) {
+        for(Bitmap b : bitmaps) {
+            ImageView i = new ImageView(getActivity());
+            i.setImageBitmap(b);
+            i.setLayoutParams(lp);
+            l.addView(i);
+        }
+    }
+    public ArrayList<String> extractItemAndPrice(String s) {
+        s = cleanString(s);
+        StringBuilder word = new StringBuilder("");
+        String price = "";
+        StringBuilder item = new StringBuilder("");
+        for(int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if(c == ' ') {
+                if(word.toString().contains("$")) {
+                    word = new StringBuilder(word.substring(word.indexOf("$")));
+                }
+                try{
+                    Double l = Double.parseDouble(word.toString());
+                    price = word.toString();
+                }
+                catch(Exception e) {
+                    item.append(word.toString() + " ");
+                }
+                word = new StringBuilder("");
+            }
+            else {
+                word.append(c);
+            }
+        }
+        ArrayList<String> answer = new ArrayList<String>();
+        answer.add(item.toString());
+        answer.add(price);
+        return answer;
+    }
+    public String cleanString(String s) {
+        StringBuilder clean = new StringBuilder("");
+        StringBuilder word = new StringBuilder("");
+        for(int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if(c == ' ' || c == '\n' || c =='\r') {
+                if(!word.toString().equals("")) {
+                    clean.append(word+" ");
+                    word = new StringBuilder("");
+                }
+            }
+            else {
+                word.append(c);
+            }
+        }
+        clean.append(word);
+        return clean.toString();
+
+    }
         // Create our Preview view and set it as the content of our activity.
+    public class ScanReceipt extends AsyncTask<Bitmap,Void,Void> {
+            ProgressDialog progressDialog = new ProgressDialog(getActivity());
+            ArrayList<Bitmap> linedImages = new ArrayList<Bitmap>();
+            @Override
+            public void onPreExecute() {
+                progressDialog.setTitle("Detecting items");
+                progressDialog.show();
+            }
+            @Override
+            public Void doInBackground(Bitmap... params) {
+                Bitmap receiptImage = params[0];
+                final File imgPath = saveToExternalStorageString(receiptImage);
+                Log.e(GroceryLineBreakMatch.class.getSimpleName(), "Saved to External Storage");
+                ArrayList<Integer> lineBreaks = GroceryLineBreakMatch.preProcess(imgPath.getAbsolutePath(), 0);
+                for(int i = 0; i < lineBreaks.size()-1;i++) {
+                    linedImages.add(Bitmap.createBitmap(receiptImage, 0, lineBreaks.get(i), receiptImage.getWidth(), Math.min(receiptImage.getHeight() - lineBreaks.get(i), lineBreaks.get(i + 1) - lineBreaks.get(i) + 15)));
+                }
+
+                return null;
+            }
+            @Override
+            protected void onPostExecute(Void param){
+                progressDialog.setTitle("Analyzing");
+                LinearLayout l = new LinearLayout(getActivity());
+                l.setOrientation(LinearLayout.VERTICAL);
+                ScrollView s = new ScrollView(getActivity());
+                s.addView(l);
+                preview.addView(s);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(0, 0, 0, 10);
+                //displayBitmaps(linedImages, l, lp);
+                scanBitmaps(linedImages, 0,progressDialog, l,new HashSet<Integer>());
+            }
+        }
 }
