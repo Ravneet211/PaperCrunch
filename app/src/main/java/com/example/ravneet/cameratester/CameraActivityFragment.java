@@ -22,7 +22,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -52,6 +51,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import cz.msebera.android.httpclient.Header;
@@ -472,7 +472,7 @@ public class CameraActivityFragment extends Fragment {
                     rs = new String(responseBody, "UTF-8");// success
                     rs = analyzeJSONString(rs);
                     ocrResult.setText(rs);
-                    Log.e(LOG_TAG,rs);
+                    Log.e(LOG_TAG, rs);
                     if (rs.substring(0, 6).equals("Error")) {
                         eliminateSaveButton();
                     } else {
@@ -484,7 +484,7 @@ public class CameraActivityFragment extends Fragment {
                             @Override
                             public void onClick(View v) {
                                 saveToExternalStorage(bitmap);
-                                startLoginActivity(ocrResult.getText().toString().trim(), ScanType);
+                                startLoginActivity(ocrResult.getText().toString().trim(), ScanType,null);
                             }
                         });
                     }
@@ -567,9 +567,14 @@ public class CameraActivityFragment extends Fragment {
         }
     }
 
-    public void startLoginActivity(String s, String scanType) {
+    public void startLoginActivity(String s, String scanType,HashMap<Integer,Integer> itemPriceMap) {
         Intent intent = new Intent(getActivity(), SignInActivityWithDrive.class);
-        intent.putExtra(Intent.EXTRA_TEXT, s);
+        if(ScanType.equals("Bill")) {
+            intent.putExtra(Intent.EXTRA_TEXT,itemPriceMap);
+        }
+        else{
+            intent.putExtra(Intent.EXTRA_TEXT, s);
+        }
         intent.putExtra("Parent Activity", CameraActivity.class.getSimpleName());
         intent.putExtra("Type", ScanType);
         startActivity(intent);
@@ -744,9 +749,7 @@ public class CameraActivityFragment extends Fragment {
             public void onFinish() {
                 if(i == bitmaps.size()-1) {
                     progressDialog.dismiss();
-                    Button addButton = new Button(getActivity());
-                    addButton.setText("Add field");
-                    l.addView(addButton);
+                    createAddButton(l);
                 }
                 discardButton.setVisibility(View.VISIBLE);
                 discardInstruction.setVisibility(View.VISIBLE);
@@ -760,10 +763,13 @@ public class CameraActivityFragment extends Fragment {
                     /*progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                     progressDialog.setTitle("Analyzing");
                     progressDialog.show();*/
-                    LinearLayout buttonLayout = new LinearLayout(getActivity());
-                    buttonLayout.setWeightSum(3);
-                    Button mergeButton = new Button(getActivity());
-                    mergeButton.setText("Merge");
+                    LinearLayout buttonLayout = createButtonLayout(l);
+                    ImageView mergeButton = (ImageView)buttonLayout.getChildAt(2);
+                    addSaveFunctionality(buttonLayout,l);
+                    addDiscardItemFunctionality(buttonLayout,l);
+                    addDiscardFunctionality(buttonLayout);
+                    mergeButton.setImageResource(R.drawable.ic_merge_type_black_24dp);
+
                     mergeButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -814,8 +820,8 @@ public class CameraActivityFragment extends Fragment {
                                     priceEditText.setText(price);
                                     for (int i = 1; i < selectedBoxes.size(); i++) {
                                         l.removeViewAt(selectedBoxes.get(i));
-                                        for(int j = i; j < selectedBoxes.size(); j++) {
-                                            selectedBoxes.set(j,selectedBoxes.get(j)-1);
+                                        for (int j = i; j < selectedBoxes.size(); j++) {
+                                            selectedBoxes.set(j, selectedBoxes.get(j) - 1);
                                         }
                                     }
                                 }
@@ -829,38 +835,139 @@ public class CameraActivityFragment extends Fragment {
                             }
                         }
 
-                        public ArrayList<Integer> generateOrderedList(HashSet<Integer> checkedBoxes) {
-                            ArrayList<Integer> answer = new ArrayList<Integer>();
-                            for (int i : checkedBoxes) {
-                                answer.add(i);
-                            }
-                            Collections.sort(answer);
-                            return answer;
-                        }
-
-                        public void updatedBoxes(LinearLayout l) {
-                            for (int i = 1; i < l.getChildCount() - 1; i++) {
-                                LinearLayout itemLayout = (LinearLayout) l.getChildAt(i);
-                                CheckBox c = (CheckBox) itemLayout.getChildAt(0);
-                                final int j = i;
-                                c.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                                    @Override
-                                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                        if (isChecked) {
-                                            checkedBoxes.add(j);
-                                        }
-                                    }
-                                });
-                            }
-                        }
 
                     });
-                    buttonLayout.addView(mergeButton);
                     l.addView(buttonLayout);
                 }
-                Log.e(LOG_TAG,"On iteration: " + Integer.toString(i));
+                Log.e(LOG_TAG, "On iteration: " + Integer.toString(i));
             }
+            public LinearLayout createButtonLayout(LinearLayout parent) {
+                LinearLayout buttonLayout = new LinearLayout(getActivity());
+                buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+                buttonLayout.setWeightSum(4.0f);
+                ImageView img;
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dpToPx(100),1.0f);
+                for(int i = 0; i < 4; i++) {
+                    img = new ImageView(getActivity());
+                    img.setLayoutParams(lp);
+                    buttonLayout.addView(img);
+                }
+                return buttonLayout;
+            }
+            public ArrayList<Integer> generateOrderedList(HashSet<Integer> checkedBoxes) {
+                ArrayList<Integer> answer = new ArrayList<Integer>();
+                for (int i : checkedBoxes) {
+                    answer.add(i);
+                }
+                Collections.sort(answer);
+                return answer;
+            }
+            public void addDiscardItemFunctionality(LinearLayout buttonLayout, LinearLayout superLayout) {
+                ImageView discardImageView = (ImageView)buttonLayout.getChildAt(1);
+                discardImageView.setImageResource(R.drawable.ic_remove_black_36dp);
+                discardImageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ArrayList<Integer> orderedCheckBoxes = generateOrderedList(checkedBoxes);
+                        for (int i = 0; i < orderedCheckBoxes.size(); i++) {
+                            int position = orderedCheckBoxes.get(i);
+                            l.removeViewAt(position);
+                            for (int j = i; j < orderedCheckBoxes.size(); j++) {
+                                orderedCheckBoxes.set(j, orderedCheckBoxes.get(j) - 1);
+                            }
 
+                        }
+                        checkedBoxes.clear();
+                        updatedBoxes(l);
+                    }
+                });
+            }
+            public void updatedBoxes(LinearLayout l) {
+                for (int i = 1; i < l.getChildCount() - 1; i++) {
+                    LinearLayout itemLayout = (LinearLayout) l.getChildAt(i);
+                    CheckBox c = (CheckBox) itemLayout.getChildAt(0);
+                    final int j = i;
+                    c.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            if (isChecked) {
+                                checkedBoxes.add(j);
+                            }
+                            else {
+                                if(checkedBoxes.contains(j)) {
+                                    checkedBoxes.remove(j);
+                                }
+                            }
+                            Log.e(LOG_TAG, checkedBoxes.toString());
+                        }
+                    });
+                }
+            }
+            public void addDiscardFunctionality(LinearLayout buttonLayout) {
+                ImageView discardButton = (ImageView)buttonLayout.getChildAt(0);
+                discardButton.setImageResource(R.drawable.ic_cancel_black_48dp);
+                discardButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        getActivity().recreate();
+                    }
+                });
+            }
+            public void addSaveFunctionality(LinearLayout buttonLayout, final LinearLayout parent) {
+                final HashMap<String,String> itemPriceMap = new HashMap<String,String>();
+                ImageView saveButton = (ImageView) buttonLayout.getChildAt(3);
+                saveButton.setImageResource(R.drawable.ic_check_circle_black_48dp);
+                saveButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String price;
+                        String item="";
+                        itemPriceMap.clear();
+                        for(int i = 1; i < parent.getChildCount()-1;i++) {
+                            price=null;
+                            item="";
+                            LinearLayout itemLayout = (LinearLayout)parent.getChildAt(i);
+                            EditText itemText = (EditText)itemLayout.getChildAt(1);
+                            item = itemText.getText().toString().trim();
+                            if(itemLayout.getChildCount() == 3) {
+                                EditText priceText = (EditText)itemLayout.getChildAt(2);
+                                price = priceText.getText().toString().trim();
+                            }
+                            itemPriceMap.put(item,price);
+                        }
+                        Log.e(LOG_TAG, itemPriceMap.toString());
+                    }
+                });
+
+            }
+            public void createAddButton(final LinearLayout parent) {
+                ImageView addButton = new ImageView(getActivity());
+                addButton.setImageResource(R.drawable.ic_add_black_36dp);
+                addButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        LinearLayout itemPriceLayout = new LinearLayout(getActivity());
+                        itemPriceLayout.setOrientation(LinearLayout.HORIZONTAL);
+                        itemPriceLayout.addView(new CheckBox(getActivity()));
+                        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+                        lp.setMargins(0,0,dpToPx(20),0);
+                        EditText itemEditText = new EditText(getActivity());
+                        itemEditText.setBackgroundResource(R.drawable.rounded_edittext);
+                        itemEditText.setGravity(Gravity.CENTER);
+                        itemEditText.setLayoutParams(lp);
+                        EditText priceEditText = new EditText(getActivity());
+                        priceEditText.setBackgroundResource(R.drawable.rounded_edittext);
+                        LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(dpToPx(50),LinearLayout.LayoutParams.WRAP_CONTENT);
+                        priceEditText.setGravity(Gravity.CENTER);
+                        priceEditText.setLayoutParams(lp2);
+                        itemPriceLayout.addView(itemEditText);
+                        itemPriceLayout.addView(priceEditText);
+                        parent.addView(itemPriceLayout,parent.getChildCount()-1);
+                        updatedBoxes(parent);
+                    }
+                });
+                parent.addView(addButton);
+            }
             public String analyzeJSONString(String s) {
                 String response = "";
                 try {
