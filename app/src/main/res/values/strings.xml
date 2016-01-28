@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CameraTester</string>
+    <string name="app_name">PaperCrunch</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_crop">CropActivity</string>
     <string name="title_activity_log">Sign in</string>
