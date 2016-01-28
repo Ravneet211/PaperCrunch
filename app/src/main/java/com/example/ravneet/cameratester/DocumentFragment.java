@@ -102,6 +102,7 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
         if(progressDialog == null) {
             progressDialog = new ProgressDialog(getActivity());
         }
+        progressDialog.setTitle("Loading");
         progressDialog.show();
         DocumentRetrieve documentRetrieve = new DocumentRetrieve();
         documentRetrieve.execute(rootView);
@@ -164,12 +165,12 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
+        /*if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
-        }
+        }*/
     }
 
     @Override
@@ -226,8 +227,6 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
 
         @Override
         public void onPreExecute() {
-            progressDialog.setTitle("Loading");
-            progressDialog.show();
         }
         @Override
         protected void onPostExecute(Void nothing) {

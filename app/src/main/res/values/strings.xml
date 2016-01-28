@@ -74,5 +74,7 @@
     <string name="title_activity_image_display">ImageDisplayActivity</string>
     <string name="dialog_message">Are you sure you want to delete the processed image? This action cannot be undone!</string>
     <string name="dialog_title">Delete Processed Image</string>
+    <string name="view_receipt">Digitized Receipt</string>
+    <string name="title_activity_bill_display">BillDisplayActivity</string>
 
 </resources>

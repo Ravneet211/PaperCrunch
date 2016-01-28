@@ -68,6 +68,10 @@
         <activity
             android:name=".ImageDisplayActivity"
             android:label="@string/title_activity_image_display"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".BillDisplayActivity"
+            android:label="@string/title_activity_bill_display"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

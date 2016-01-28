@@ -399,6 +399,7 @@ public class CameraActivityFragment extends Fragment {
                 preview.removeAllViews();
                 ScanReceipt scanReceipt = new ScanReceipt();
                 scanReceipt.execute(croppedImage);
+
                 /*ProgressDialog progressDialog = new ProgressDialog(getActivity());
                 progressDialog.setTitle("Analyzing");
                 progressDialog.show();
@@ -484,7 +485,7 @@ public class CameraActivityFragment extends Fragment {
                             @Override
                             public void onClick(View v) {
                                 saveToExternalStorage(bitmap);
-                                startLoginActivity(ocrResult.getText().toString().trim(), ScanType,null);
+                                startLoginActivity(ocrResult.getText().toString().trim(), ScanType);
                             }
                         });
                     }
@@ -513,6 +514,7 @@ public class CameraActivityFragment extends Fragment {
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progressDialog.setTitle("Analyzing");
                 progressDialog.show();
+                progressDialog.setCancelable(false);
             }
 
             public String analyzeJSONString(String s) {
@@ -567,14 +569,9 @@ public class CameraActivityFragment extends Fragment {
         }
     }
 
-    public void startLoginActivity(String s, String scanType,HashMap<Integer,Integer> itemPriceMap) {
+    public void startLoginActivity(String s, String scanType) {
         Intent intent = new Intent(getActivity(), SignInActivityWithDrive.class);
-        if(ScanType.equals("Bill")) {
-            intent.putExtra(Intent.EXTRA_TEXT,itemPriceMap);
-        }
-        else{
-            intent.putExtra(Intent.EXTRA_TEXT, s);
-        }
+        intent.putExtra(Intent.EXTRA_TEXT, s);
         intent.putExtra("Parent Activity", CameraActivity.class.getSimpleName());
         intent.putExtra("Type", ScanType);
         startActivity(intent);
@@ -624,12 +621,14 @@ public class CameraActivityFragment extends Fragment {
     public void deleteFromInternalStorage() {
         ContextWrapper cw = new ContextWrapper(getContext());
         // path to /data/data/yourapp/app_data/imageDir
-        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
-        // Create imageDir
-        File mypath = new File(directory, "bill.jpg");
-        if(mypath.exists()) {
-            Log.e(LOG_TAG,"Deleted from internal storage");
-            mypath.delete();
+        if(cw != null) {
+            File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+            // Create imageDir
+            File mypath = new File(directory, "bill.jpg");
+            if (mypath.exists()) {
+                Log.e(LOG_TAG, "Deleted from internal storage");
+                mypath.delete();
+            }
         }
     }
     public File saveToExternalStorageString(Bitmap bitmap) {
@@ -721,14 +720,15 @@ public class CameraActivityFragment extends Fragment {
                             priceItemLayout.addView(e);
                         }
                         if(!itemAndPrice.get(1).equals("") && itemAndPrice.get(1) != null) {
+                            LinearLayout.LayoutParams lp3 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
                             EditText e = new EditText(getActivity());
-                            e.setWidth(dpToPx(50));
+                            e.setPadding(dpToPx(10),0,dpToPx(10),0);
+                            e.setLayoutParams(lp3);
                             e.setGravity(Gravity.CENTER);
                             e.setBackgroundResource(R.drawable.rounded_edittext);
                             e.setText(itemAndPrice.get(1));
                             priceItemLayout.addView(e);
                         }
-
                         priceItemLayout.setLayoutParams(lp);
                         l.addView(priceItemLayout);
 
@@ -754,7 +754,7 @@ public class CameraActivityFragment extends Fragment {
                 discardButton.setVisibility(View.VISIBLE);
                 discardInstruction.setVisibility(View.VISIBLE);
                 deleteFromInternalStorage();
-                scanBitmaps(bitmaps, i + 1, progressDialog, l, checkedBoxes,updatedCheckBoxes);
+                scanBitmaps(bitmaps, i + 1, progressDialog, l, checkedBoxes, updatedCheckBoxes);
             }
 
             @Override
@@ -935,6 +935,7 @@ public class CameraActivityFragment extends Fragment {
                             }
                             itemPriceMap.put(item,price);
                         }
+                        startLoginActivity(itemPriceMap.toString(),ScanType);
                         Log.e(LOG_TAG, itemPriceMap.toString());
                     }
                 });
@@ -950,15 +951,16 @@ public class CameraActivityFragment extends Fragment {
                         itemPriceLayout.setOrientation(LinearLayout.HORIZONTAL);
                         itemPriceLayout.addView(new CheckBox(getActivity()));
                         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
-                        lp.setMargins(0,0,dpToPx(20),0);
+                        lp.setMargins(0, 0, dpToPx(20), 0);
                         EditText itemEditText = new EditText(getActivity());
                         itemEditText.setBackgroundResource(R.drawable.rounded_edittext);
                         itemEditText.setGravity(Gravity.CENTER);
                         itemEditText.setLayoutParams(lp);
                         EditText priceEditText = new EditText(getActivity());
                         priceEditText.setBackgroundResource(R.drawable.rounded_edittext);
-                        LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(dpToPx(50),LinearLayout.LayoutParams.WRAP_CONTENT);
+                        LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(dpToPx(64),LinearLayout.LayoutParams.WRAP_CONTENT);
                         priceEditText.setGravity(Gravity.CENTER);
+                        priceEditText.setPadding(dpToPx(10),dpToPx(10),dpToPx(10),dpToPx(10));
                         priceEditText.setLayoutParams(lp2);
                         itemPriceLayout.addView(itemEditText);
                         itemPriceLayout.addView(priceEditText);
@@ -1015,7 +1017,7 @@ public class CameraActivityFragment extends Fragment {
             char c = s.charAt(i);
             if(c == ' ') {
                 if(word.toString().contains("$")) {
-                    word = new StringBuilder(word.substring(word.indexOf("$")));
+                    word = new StringBuilder(word.substring(word.indexOf("$")+1));
                 }
                 try{
                     Double l = Double.parseDouble(word.toString());
@@ -1061,6 +1063,7 @@ public class CameraActivityFragment extends Fragment {
             @Override
             public void onPreExecute() {
                 progressDialog.setTitle("Detecting items");
+                progressDialog.setCancelable(false);
                 progressDialog.show();
             }
             @Override

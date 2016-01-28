@@ -112,7 +112,7 @@ public class GroceryLineBreakMatch {
 
         CvRect rect1 = null;
 
-        int[] xfreq = new int[width];
+       /* int[] xfreq = new int[width];
         int thresh_constant = 10000;
         for (int i = 0; i < width; i++) {
             int xpoll = i;
@@ -125,7 +125,7 @@ public class GroceryLineBreakMatch {
                     }
                 }
             }
-        }
+        }*/
         Log.e(LOG_TAG,"Calculated xfreq");
         // poll the pixels at each row and see how many contours intersect
         // the index of yfreq represents the particular y row

@@ -50,8 +50,9 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("My Bills");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -79,10 +80,12 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
                 if (position == 0) {
                     fragmentManager.beginTransaction().replace(R.id.main_frame, billFragment)
                             .commit();
+                    toolbar.setTitle("My Bills");
 
                 }
                 if (position == 1) {
                     fragmentManager.beginTransaction().replace(R.id.main_frame,documentFragment).commit();
+                    toolbar.setTitle("My Documents");
                 }
                 if (position == 2) {
                     Intent intent = new Intent(activityWeakReference.get(), SignInActivityWithDrive.class);
