@@ -208,22 +208,34 @@ public class BillFragment extends android.app.Fragment implements GoogleApiClien
             Query billSortedQuery = new Query.Builder()
                     .addFilter(Filters.eq(SearchableField.MIME_TYPE, "text/plain"))
                     .setSortOrder(sortOrder).build();
+            imageFiles.clear();
             MetadataBuffer metadataBuffer = Drive.DriveApi.getAppFolder(mGoogleApiClient).queryChildren(mGoogleApiClient, imageSortedQuery).await().getMetadataBuffer();
             if (metadataBuffer != null) {
+                if(metadataBuffer.getCount() == 0) {
+                    Log.e(LOG_TAG,"Image Buffer Empty");
+                }
                 for (Metadata md : metadataBuffer) {
                     Log.e(LOG_TAG, md.getTitle());
                     if (!md.isTrashed()) {
                         imageFiles.add(md.getDriveId());
                     }
+                    else {
+                        Log.e(LOG_TAG,md.getTitle()+" is Trashed: "+ Boolean.toString(md.isTrashed()));
+                    }
                 }
             }
+            billFiles.clear();
             MetadataBuffer metadataBuffer1 = Drive.DriveApi.getAppFolder(mGoogleApiClient).queryChildren(mGoogleApiClient, billSortedQuery).await().getMetadataBuffer();
             if (metadataBuffer1 != null) {
+                if(metadataBuffer1.getCount() == 0) {
+                    Log.e(LOG_TAG,"Bill metadatabuffer empty");
+                }
                 for (Metadata md : metadataBuffer1) {
                     Log.e(LOG_TAG, md.getTitle());
                     if (!md.isTrashed()) {
                         billFiles.add(md.getDriveId());
                     }
+
                 }
             }
             /*for (DriveId d : billFiles) {
@@ -276,6 +288,7 @@ public class BillFragment extends android.app.Fragment implements GoogleApiClien
                             answer.put(item.toString(),null);
                         }
                         else {
+                            Log.e(LOG_TAG,price.toString());
                             answer.put(item.toString(),price.toString());
                         }
                         price = new StringBuilder("");

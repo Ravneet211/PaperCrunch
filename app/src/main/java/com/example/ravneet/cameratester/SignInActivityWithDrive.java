@@ -1,5 +1,6 @@
 package com.example.ravneet.cameratester;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,6 +24,8 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Activity to demonstrate basic retrieval of the Google user's ID, email address, and basic
  * profile.
@@ -43,7 +46,7 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
     private TextView mStatusTextView;
     private ProgressDialog mProgressDialog;
     private boolean done = false;
-
+    private WeakReference<Activity> signInActivityWeakReference = new WeakReference<Activity>(this);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -157,6 +160,14 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
                         public void onClick(DialogInterface dialog, int which) {
                             signOut();
                             done = true;
+                        }
+                    });
+                    alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent homeActivityIntent = new Intent(signInActivityWeakReference.get(),HomeActivity.class);
+                            homeActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(homeActivityIntent);
                         }
                     });
                     AlertDialog alertDialog = alertDialogBuilder.create();

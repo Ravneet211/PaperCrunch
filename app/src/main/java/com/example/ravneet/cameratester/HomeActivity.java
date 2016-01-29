@@ -167,7 +167,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
     public void handleSignInResult(GoogleSignInResult result) {
         if(result.isSuccess()) {
             account = result.getSignInAccount();
-            Picasso.with(this).load(account.getPhotoUrl()).transform(new CircleTransform()).into(profileImageView);
+            Picasso.with(this).load(account.getPhotoUrl()).transform(new CircleTransform()).placeholder(R.mipmap.ic_default_profile).into(profileImageView);
             String personName = account.getDisplayName();
             String personEmail = account.getEmail();
             TextView displayName = (TextView)findViewById(R.id.profile_display_name);

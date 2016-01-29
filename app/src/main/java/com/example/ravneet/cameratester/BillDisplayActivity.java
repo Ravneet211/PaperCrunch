@@ -178,7 +178,7 @@ public class BillDisplayActivity extends AppCompatActivity implements GoogleApiC
                     }
                 }
                 answer.put(item.toString(), price.toString());
-                //Log.e(LOG_TAG,answer.toString());
+                Log.e(LOG_TAG,answer.toString());
                 return answer;
             }
 
