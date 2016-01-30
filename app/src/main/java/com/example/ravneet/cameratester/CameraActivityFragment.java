@@ -621,7 +621,7 @@ public class CameraActivityFragment extends Fragment {
     public void deleteFromInternalStorage() {
         ContextWrapper cw = new ContextWrapper(getContext());
         // path to /data/data/yourapp/app_data/imageDir
-        if(cw != null) {
+        if(cw != null && getContext() != null) {
             File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
             // Create imageDir
             File mypath = new File(directory, "bill.jpg");

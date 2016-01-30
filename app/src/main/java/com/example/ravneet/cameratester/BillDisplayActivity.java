@@ -264,6 +264,7 @@ public class BillDisplayActivity extends AppCompatActivity implements GoogleApiC
                 priceText.setText(billMap.get(s));
                 priceText.setLayoutParams(lp2);
                 Log.e(LOG_TAG,"Letter : "+ letter);
+
                 MaterialLetterIcon icon = new MaterialLetterIcon.Builder(this) //
                         .shapeColor(letterColorHashMap.get(letter))
                         .shapeType(MaterialLetterIcon.SHAPE_CIRCLE)

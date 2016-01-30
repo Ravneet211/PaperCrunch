@@ -149,29 +149,52 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
                 startActivity(intent);
 
             }
-            else if(getIntent().getStringExtra("Parent Activity").equals(HomeActivity.class.getSimpleName()) && getIntent().getStringExtra("Action").equals("Logout") && !done) {
+            else if(getIntent().getStringExtra("Parent Activity").equals(HomeActivity.class.getSimpleName()) && (getIntent().getStringExtra("Action").equals("Logout")||getIntent().getStringExtra("Action").equals("Disconnect")) && !done) {
                //do nothing
-                    Log.e(TAG,"Case 2");
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-                    alertDialogBuilder.setTitle("Sign out");
-                    alertDialogBuilder.setMessage("Are you sure you want to sign out?");
-                    alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            signOut();
-                            done = true;
-                        }
-                    });
-                    alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent homeActivityIntent = new Intent(signInActivityWeakReference.get(),HomeActivity.class);
-                            homeActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(homeActivityIntent);
-                        }
-                    });
-                    AlertDialog alertDialog = alertDialogBuilder.create();
-                    alertDialog.show();
+                    if(getIntent().getStringExtra("Action").equals("Logout")) {
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                        alertDialogBuilder.setTitle("Sign out");
+                        alertDialogBuilder.setMessage("Are you sure you want to sign out?");
+                        alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                signOut();
+                                done = true;
+                            }
+                        });
+                        alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent homeActivityIntent = new Intent(signInActivityWeakReference.get(), HomeActivity.class);
+                                homeActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(homeActivityIntent);
+                            }
+                        });
+                        AlertDialog alertDialog = alertDialogBuilder.create();
+                        alertDialog.show();
+                    }
+                    else if(getIntent().getStringExtra("Action").equals("Disconnect")) {
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                        alertDialogBuilder.setTitle("Disconnect Account");
+                        alertDialogBuilder.setMessage("Are you sure you want to disconnect your account?");
+                        alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                revokeAccess();
+                                done = true;
+                            }
+                        });
+                        alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent homeActivityIntent = new Intent(signInActivityWeakReference.get(), HomeActivity.class);
+                                homeActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(homeActivityIntent);
+                            }
+                        });
+                        AlertDialog alertDialog = alertDialogBuilder.create();
+                        alertDialog.show();
+                    }
             }
             else {
                 Log.e(TAG,"Case 3");

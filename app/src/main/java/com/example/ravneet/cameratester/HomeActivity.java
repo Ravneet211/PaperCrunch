@@ -67,6 +67,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
         a.add("My Bills");
         a.add("My Scanned Documents");
         a.add("Logout");
+        a.add("Disconnect");
         final ScrimInsetsFrameLayout s = (ScrimInsetsFrameLayout) findViewById(R.id.left_drawer_container);
         final ListView l = (ListView) findViewById(R.id.left_drawer);
         final FragmentManager fragmentManager = getFragmentManager();
@@ -92,6 +93,13 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
                     intent.putExtra("Parent Activity", LOG_TAG);
                     intent.putExtra("Action","Logout");
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                }
+                if(position == 3) {
+                    Intent intent = new Intent(activityWeakReference.get(),SignInActivityWithDrive.class);
+                    intent.putExtra("Parent Activity",LOG_TAG);
+                    intent.putExtra("Action","Disconnect");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                 }
                 l.setItemChecked(position, true);
@@ -182,9 +190,6 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
             else {
                 Log.e(LOG_TAG,personPhoto.toString());
             }
-            Log.e(LOG_TAG,personName);
-            Log.v(LOG_TAG, account.getEmail());
-            Log.v(LOG_TAG, personId);
         }
         else {
             Intent signInIntent = new Intent(this,SignInActivityWithDrive.class);

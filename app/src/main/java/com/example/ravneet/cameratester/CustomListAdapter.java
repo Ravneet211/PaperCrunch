@@ -31,17 +31,20 @@ public class CustomListAdapter  extends ArrayAdapter<String> {
         LinearLayout rowView = (LinearLayout)inflater.inflate(layoutResourceID,parent,false);
         ImageView icon = (ImageView) rowView.findViewById(R.id.list_item_icon);
         TextView listText = (TextView)rowView.findViewById(R.id.list_item_content);
+        if(position < 4) {
+            listText.setText(values.get(position));
+        }
         if(position == 0) {
             icon.setImageResource(R.drawable.ic_receipt_black_24dp);
-            listText.setText(values.get(0));
         }
         if(position == 1) {
             icon.setImageResource(R.drawable.ic_description_black_24dp);
-            listText.setText(values.get(1));
         }
         if(position == 2) {
             icon.setImageResource(R.mipmap.ic_logout_icon);
-            listText.setText(values.get(2));
+        }
+        if(position == 3) {
+            icon.setImageResource(R.drawable.ic_remove_circle_outline_black_24dp);
         }
         return rowView;
     }
