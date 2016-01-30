@@ -235,7 +235,7 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
 
     public void createDocumentFolderIfNotCreated(final DriveFolder rootFolder) {
         Query documentsQuery = new Query.Builder()
-                .addFilter(Filters.eq(SearchableField.TITLE, "OCRDocuments"))
+                .addFilter(Filters.eq(SearchableField.TITLE, getString(R.string.ocr_documents_folder_name)))
                 .build();//checking if document folder exists
         rootFolder.queryChildren(mGoogleApiClient, documentsQuery).setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
             @Override
@@ -275,7 +275,7 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
     }
     private void createDocumentsFolder(final DriveFolder rootFolder) {
         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                .setTitle("OCRDocuments").build();
+                .setTitle(getString(R.string.ocr_documents_folder_name)).build();
         rootFolder.createFolder(mGoogleApiClient, changeSet).setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
             @Override
             public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
@@ -296,7 +296,7 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
     public void saveDataToFolder(final String data, final String type) {
         if(type.equals("Document")) {
             Query documentsQuery = new Query.Builder()
-                    .addFilter(Filters.eq(SearchableField.TITLE, "OCRDocuments"))
+                    .addFilter(Filters.eq(SearchableField.TITLE, getString(R.string.ocr_documents_folder_name)))
                     .build();
             Drive.DriveApi.getRootFolder(mGoogleApiClient).queryChildren(mGoogleApiClient,documentsQuery).setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
                 @Override

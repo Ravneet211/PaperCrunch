@@ -128,6 +128,16 @@ public class BillAdapter extends RecyclerView.Adapter<BillAdapter.ViewHolder> {
                 //Drive.DriveApi.getFile(mGoogleApiClient,mDataset.get(position)).delete(mGoogleApiClient);
             }
         });
+        TextView viewBillImage = (TextView)holder.mCardView.findViewById(R.id.view_bill_image);
+        viewBillImage.setClickable(true);
+        viewBillImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(c, ImageDisplayActivity.class);
+                i.putExtra(Intent.EXTRA_TEXT,imageIds.get(position).encodeToString());
+                c.startActivity(i);
+            }
+        });
 
     }
 

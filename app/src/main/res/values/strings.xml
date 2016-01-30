@@ -77,5 +77,6 @@
     <string name="view_receipt">Digitized Receipt</string>
     <string name="title_activity_bill_display">BillDisplayActivity</string>
     <string name="title_activity_icon_tester">IconTesterActivity</string>
+    <string name="ocr_documents_folder_name">PaperCrunchDocuments (DO NOT RENAME)</string>
 
 </resources>

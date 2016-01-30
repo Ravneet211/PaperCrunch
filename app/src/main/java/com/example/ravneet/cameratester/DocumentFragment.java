@@ -198,7 +198,7 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
         protected Void doInBackground(View... params) {
             DriveFolder rootFolder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
             Query documentFolderQuery = new Query.Builder()
-                    .addFilter(Filters.eq(SearchableField.TITLE, "OCRDocuments"))
+                    .addFilter(Filters.eq(SearchableField.TITLE, getString(R.string.ocr_documents_folder_name)))
                     .build();
             MetadataBuffer metadataBuffer = Drive.DriveApi.getRootFolder(mGoogleApiClient).queryChildren(mGoogleApiClient, documentFolderQuery).await().getMetadataBuffer();
             DriveFolder documentsFolder = null;
