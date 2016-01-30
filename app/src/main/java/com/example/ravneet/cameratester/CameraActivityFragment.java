@@ -10,6 +10,8 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.hardware.Camera;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -766,7 +768,7 @@ public class CameraActivityFragment extends Fragment {
                     LinearLayout buttonLayout = createButtonLayout(l);
                     ImageView mergeButton = (ImageView)buttonLayout.getChildAt(2);
                     addSaveFunctionality(buttonLayout,l);
-                    addDiscardItemFunctionality(buttonLayout,l);
+                    addDiscardItemFunctionality(buttonLayout, l);
                     addDiscardFunctionality(buttonLayout);
                     mergeButton.setImageResource(R.drawable.ic_merge_type_black_24dp);
 
@@ -1080,16 +1082,31 @@ public class CameraActivityFragment extends Fragment {
             }
             @Override
             protected void onPostExecute(Void param){
-                progressDialog.setTitle("Analyzing");
-                LinearLayout l = new LinearLayout(getActivity());
-                l.setOrientation(LinearLayout.VERTICAL);
-                ScrollView s = new ScrollView(getActivity());
-                s.addView(l);
-                preview.addView(s);
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.setMargins(0, 0, 0, 10);
-                //displayBitmaps(linedImages, l, lp);
-                scanBitmaps(linedImages, 0,progressDialog, l,new HashSet<Integer>(),0);
+                if(!isNetworkAvailable()) {
+                    TextView t = new TextView(getActivity());
+                    t.setText(getString(R.string.internet_connection_failed));
+                    t.setGravity(Gravity.CENTER);
+                    preview.addView(t);
+                    progressDialog.dismiss();
+                }
+                else {
+                    progressDialog.setTitle("Analyzing");
+                    LinearLayout l = new LinearLayout(getActivity());
+                    l.setOrientation(LinearLayout.VERTICAL);
+                    ScrollView s = new ScrollView(getActivity());
+                    s.addView(l);
+                    preview.addView(s);
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.setMargins(0, 0, 0, 10);
+                    //displayBitmaps(linedImages, l, lp);
+                    scanBitmaps(linedImages, 0, progressDialog, l, new HashSet<Integer>(), 0);
+                }
             }
+        }
+        private boolean isNetworkAvailable() {
+            ConnectivityManager connectivityManager
+                    = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
         }
 }

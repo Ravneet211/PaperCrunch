@@ -3,6 +3,8 @@ package com.example.ravneet.cameratester;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.IntentSender;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -137,20 +139,23 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+            // Inflate the layout for this fragment
+            /*if(!isNetworkAvailable()) {
+                rootView = (View)inflater.inflate(R.layout.network_fail,container,false);
+            }*/
 
-        rootView = (View)inflater.inflate(R.layout.fragment_document, container, false);
-        mRecyclerView = (RecyclerView) rootView;
-        mLayoutManager = new LinearLayoutManager(getActivity());
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
-                .addApi(Drive.API)
-                .addScope(Drive.SCOPE_APPFOLDER)
-                .addScope(Drive.SCOPE_FILE)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-        mGoogleApiClient.connect();
+                rootView = (View) inflater.inflate(R.layout.fragment_document, container, false);
+                mRecyclerView = (RecyclerView) rootView;
+                mLayoutManager = new LinearLayoutManager(getActivity());
+                mRecyclerView.setLayoutManager(mLayoutManager);
+                mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
+                        .addApi(Drive.API)
+                        .addScope(Drive.SCOPE_APPFOLDER)
+                        .addScope(Drive.SCOPE_FILE)
+                        .addConnectionCallbacks(this)
+                        .addOnConnectionFailedListener(this)
+                        .build();
+                mGoogleApiClient.connect();
 
         return rootView;
     }
@@ -301,5 +306,11 @@ public class DocumentFragment extends android.app.Fragment implements GoogleApiC
             }
             return fileID.substring(1).toString();
         }
+    }
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }
