@@ -260,6 +260,7 @@ public class BillDisplayActivity extends AppCompatActivity implements GoogleApiC
                 itemText.setText(s);
                 itemText.setMinHeight(dpToPx(60));
                 itemText.setLayoutParams(lp);
+                lp2.setMargins(0,0,dpToPx(6),0);
                 TextView priceText = new TextView(this);
                 priceText.setGravity(Gravity.CENTER);
                 priceText.setText(billMap.get(s));

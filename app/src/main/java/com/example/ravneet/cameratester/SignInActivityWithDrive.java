@@ -145,13 +145,13 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
                 Intent intent = new Intent(this, DriveSaveActivity.class);
                 intent.putExtra(Intent.EXTRA_TEXT, getIntent().getStringExtra(Intent.EXTRA_TEXT));
                 intent.putExtra("Type",getIntent().getStringExtra("Type"));
+                Log.e(TAG,"CASE 1");
                 startActivity(intent);
 
             }
-            else if(getIntent().getStringExtra("Parent Activity").equals(HomeActivity.class.getSimpleName()) && !done) {
+            else if(getIntent().getStringExtra("Parent Activity").equals(HomeActivity.class.getSimpleName()) && getIntent().getStringExtra("Action").equals("Logout") && !done) {
                //do nothing
-               String type = getIntent().getStringExtra("Action");
-                if(type.equals("Logout")) {
+                    Log.e(TAG,"Case 2");
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
                     alertDialogBuilder.setTitle("Sign out");
                     alertDialogBuilder.setMessage("Are you sure you want to sign out?");
@@ -172,9 +172,9 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
                     });
                     AlertDialog alertDialog = alertDialogBuilder.create();
                     alertDialog.show();
-                }
             }
             else {
+                Log.e(TAG,"Case 3");
                 Intent intent = new Intent(this,HomeActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
@@ -247,7 +247,7 @@ public class SignInActivityWithDrive extends AppCompatActivity implements
     private void updateUI(boolean signedIn) {
         if (signedIn) {
             findViewById(R.id.sign_in_button).setVisibility(View.GONE);
-            findViewById(R.id.sign_out_and_disconnect).setVisibility(View.VISIBLE);
+            //findViewById(R.id.sign_out_and_disconnect).setVisibility(View.VISIBLE);
         } else {
             mStatusTextView.setText(R.string.signed_out);
 
