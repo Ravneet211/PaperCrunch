@@ -8,17 +8,18 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewStub;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.github.ivbaranov.mli.MaterialLetterIcon;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -36,6 +37,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class BillDisplayActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener {
     private GoogleApiClient mGoogleApiClient;
@@ -43,6 +45,7 @@ public class BillDisplayActivity extends AppCompatActivity implements GoogleApiC
     private final String LOG_TAG = BillDisplayActivity.class.getSimpleName();
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private LinearLayout rootLayout;
+    private HashMap<String,Integer> letterColorHashMap = new HashMap<String,Integer>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,8 +146,8 @@ public class BillDisplayActivity extends AppCompatActivity implements GoogleApiC
                 }
             }
 
-            private HashMap<String, String> convertToHashMap(StringBuilder s) {
-                HashMap<String, String> answer = new HashMap<String, String>();
+            private LinkedHashMap<String, String> convertToHashMap(StringBuilder s) {
+                LinkedHashMap<String, String> answer = new LinkedHashMap<String, String>();
                 String k = s.toString();
                 if (k.equals("{}")) {
                     return answer;
@@ -178,15 +181,15 @@ public class BillDisplayActivity extends AppCompatActivity implements GoogleApiC
                     }
                 }
                 answer.put(item.toString(), price.toString());
-                Log.e(LOG_TAG,answer.toString());
+                Log.e(LOG_TAG, answer.toString());
                 return answer;
             }
 
         });
     }
 
-    private void createBillLayout(HashMap<String, String> billMap) {
-        boolean displayItemPriceLayout = true;
+    private void createBillLayout(LinkedHashMap<String, String> billMap) {
+        /*boolean displayItemPriceLayout = true;
         ViewStub v = new ViewStub(this);
         v.setLayoutResource(R.layout.item_price_layout);
         LinearLayout.LayoutParams lonelyItem = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -228,12 +231,114 @@ public class BillDisplayActivity extends AppCompatActivity implements GoogleApiC
                 rootLayout.addView(itemPriceLayout);
             }
 
+        }*/
+        generateLetterColorHashMap();
+        LinearLayout rootLinearLayout = (LinearLayout)findViewById(R.id.receipt_linear_layout);
+        CardView content;
+        LinearLayout contentLayout;
+        for(String s : billMap.keySet()) {
+            content = new CardView(this);
+            contentLayout = new LinearLayout(this);
+            if(billMap.get(s) == null || billMap.get(s).equals("null")) {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+                TextView t = new TextView(this);
+                t.setText(s);
+                t.setGravity(Gravity.CENTER);
+                t.setLayoutParams(lp);
+                t.setMinHeight(dpToPx(60));
+                t.setTypeface(null,Typeface.BOLD);
+                contentLayout.addView(t);
+            }
+            else {
+                contentLayout.setWeightSum(1.0f);
+                String letter = extractFirstLetter(s);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT,1.0f);
+                LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+                LinearLayout.LayoutParams materialIconParameters = new LinearLayout.LayoutParams(dpToPx(42),LinearLayout.LayoutParams.MATCH_PARENT);
+                TextView itemText = new TextView(this);
+                itemText.setGravity(Gravity.CENTER_VERTICAL);
+                itemText.setText(s);
+                itemText.setMinHeight(dpToPx(60));
+                itemText.setLayoutParams(lp);
+                TextView priceText = new TextView(this);
+                priceText.setGravity(Gravity.CENTER);
+                priceText.setText(billMap.get(s));
+                priceText.setLayoutParams(lp2);
+                Log.e(LOG_TAG,"Letter : "+ letter);
+                MaterialLetterIcon icon = new MaterialLetterIcon.Builder(this) //
+                        .shapeColor(letterColorHashMap.get(letter))
+                        .shapeType(MaterialLetterIcon.SHAPE_CIRCLE)
+                        .letter(letter)
+                        .letterColor(getResources().getColor(R.color.white))
+                        .letterSize(18)
+                        .lettersNumber(1)
+                        .letterTypeface(Typeface.createFromAsset(this.getAssets(), "fonts/roboto/Roboto-Light.ttf"))
+                        .initials(false)
+                        .initialsNumber(2)
+                        .create();
+                materialIconParameters.setMargins(dpToPx(6),0,dpToPx(6),0);
+                icon.setLayoutParams(materialIconParameters);
+                contentLayout.addView(icon);
+                priceText.setMinHeight(dpToPx(60));
+                contentLayout.addView(itemText);
+                contentLayout.addView(priceText);
+            }
+            content.addView(contentLayout);
+            LinearLayout.LayoutParams cardLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+            cardLayoutParams.setMargins(0,dpToPx(4),0,dpToPx(4));
+            content.setLayoutParams(cardLayoutParams);
+            rootLinearLayout.addView(content);
         }
+
     }
 
     public int dpToPx(int dp) {
         DisplayMetrics displayMetrics = this.getResources().getDisplayMetrics();
         int px = Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
         return px;
+    }
+    public String extractFirstLetter(String s) {
+        StringBuilder firstLetter = new StringBuilder("");
+        for(int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if((c >= 'A' && c <='Z') || (c >='a' && c<='z')) {
+                firstLetter.append(c);
+                break;
+            }
+        }
+        return firstLetter.toString();
+    }
+    public void generateLetterColorHashMap() {
+        char c = 'A';
+        while(c <= 'Z') {
+            if(c%5==0) {
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.red_letter));
+                c+=32;
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.red_letter));
+            }
+            else if(c%5==1) {
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.green_letter));
+                c+=32;
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.green_letter));
+            }
+            else if(c%5==2) {
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.blue_letter));
+                c+=32;
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.blue_letter));
+            }
+            else if(c%5==3) {
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.yellow_letter));
+                c+=32;
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.yellow_letter));
+            }
+            else {
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.gray_letter));
+                c+=32;
+                letterColorHashMap.put(Character.toString(c),getResources().getColor(R.color.gray_letter));
+            }
+            c-=32;
+            c++;
+        }
+
     }
 }

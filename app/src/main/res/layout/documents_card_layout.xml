@@ -10,7 +10,7 @@
         android:layout_height="match_parent">
         <ImageView
             android:layout_width="match_parent"
-            android:layout_height="240dp"
+            android:layout_height="180dp"
             android:src = "@mipmap/ic_launcher"
             android:id="@+id/doc_pic"
             android:scaleType="centerCrop" />

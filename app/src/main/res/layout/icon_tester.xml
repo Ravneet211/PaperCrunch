@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.github.ivbaranov.mli.MaterialLetterIcon
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:mli_shape_color="@color/blue_grey_500"
+        app:mli_shape_type="circle"
+        app:mli_letter="S"
+        app:mli_letter_color="@color/white"
+        app:mli_letter_size="26"
+        app:mli_letters_number="1"
+        app:mli_initials="false"
+        app:mli_initials_number="2"/>
+</FrameLayout>

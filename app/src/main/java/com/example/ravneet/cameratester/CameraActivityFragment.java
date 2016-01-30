@@ -51,8 +51,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -914,7 +914,7 @@ public class CameraActivityFragment extends Fragment {
                 });
             }
             public void addSaveFunctionality(LinearLayout buttonLayout, final LinearLayout parent) {
-                final HashMap<String,String> itemPriceMap = new HashMap<String,String>();
+                final LinkedHashMap<String,String> itemPriceMap = new LinkedHashMap<String,String>();
                 ImageView saveButton = (ImageView) buttonLayout.getChildAt(3);
                 saveButton.setImageResource(R.drawable.ic_check_circle_black_48dp);
                 saveButton.setOnClickListener(new View.OnClickListener() {

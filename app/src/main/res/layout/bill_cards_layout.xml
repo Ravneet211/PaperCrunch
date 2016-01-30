@@ -5,52 +5,62 @@
     android:elevation="6dp"
     android:layout_margin="6dp"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:id="@+id/bill_card_overall_layout">
-        <LinearLayout
+
+        <ImageView
             android:layout_width="match_parent"
-            android:layout_height="240dp"
-            android:minHeight="240dp"
-            android:id="@+id/receipt_content_linear_layout"
-            android:orientation="vertical">
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:weightSum="1">
+            android:layout_height="180dp"
+            android:minHeight="180dp"
+            android:id="@+id/image_placeholder"
+            android:orientation="vertical"
+            android:scaleType="centerCrop" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:id="@+id/view_receipt_image"
-                android:layout_weight="0.6"
-                android:gravity="center"
-                android:text="@string/view_image"
-                android:clickable="true"
-                android:textColor="#fbc02d" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@id/image_placeholder"
+                android:weightSum="1"
+                android:layout_gravity="left|bottom">
 
-            <TextView
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:id="@+id/divider"
-                android:background="#757575" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Image"
+                    android:id="@+id/view_bill_image"
+                    android:layout_weight="0.60"
+                    android:gravity="center"
+                    android:textColor="#fbc02d"/>
+                <include layout="@layout/divider"
+                    android:layout_height="match_parent"
+                    android:layout_width ="0.5dp"
+                    android:layout_weight="0.01"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:id="@+id/view_receipt"
-                android:text="@string/view_receipt"
-                android:layout_weight="0.5"
-                android:gravity="center"
-                android:clickable="true"
-                android:textColor="#42a5f5" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Digitized Receipt"
+                    android:id="@+id/view_receipt"
+                    android:layout_weight="0.39"
+                    android:gravity="center"
+                    android:textColor="#42a5f5"/>
 
-    </LinearLayout>
+            </LinearLayout>
+
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:id="@+id/delete_receipt"
+            android:src="@android:drawable/ic_delete"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true" />
+
+    </RelativeLayout>
 
 </android.support.v7.widget.CardView>

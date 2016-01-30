@@ -1,7 +1,9 @@
 package com.example.ravneet.cameratester;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -9,11 +11,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveId;
 
 import java.util.ArrayList;
@@ -57,10 +61,6 @@ public class BillAdapter extends RecyclerView.Adapter<BillAdapter.ViewHolder> {
         // create a new view
         CardView v = (CardView) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.bill_cards_layout, parent, false);
-        LinearLayout l = (LinearLayout)v.findViewById(R.id.receipt_content_linear_layout);
-        ImageView i = new ImageView(c);
-        i.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        l.addView(i);
         // set the view's size, margins, paddings and layout parameters
         ViewHolder vh = new ViewHolder(v);
 
@@ -72,8 +72,7 @@ public class BillAdapter extends RecyclerView.Adapter<BillAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, final int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        LinearLayout l = (LinearLayout)holder.mCardView.findViewById(R.id.receipt_content_linear_layout);
-        ImageView billImage = (ImageView)l.getChildAt(0);
+        ImageView billImage = (ImageView)holder.mCardView.findViewById(R.id.image_placeholder);
         TextView billButton = (TextView)holder.mCardView.findViewById(R.id.view_receipt);
         billButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,6 +86,48 @@ public class BillAdapter extends RecyclerView.Adapter<BillAdapter.ViewHolder> {
                 .from(DriveId.class)
                 .load(imageIds.get(position))
                 .into(billImage);
+        ImageView deleteButton = (ImageView) holder.mCardView.findViewById(R.id.delete_receipt);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(c);
+                alertDialogBuilder.setMessage(R.string.dialog_message)
+                        .setTitle(R.string.dialog_title).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (mGoogleApiClient.isConnected()) {
+                            DriveFile hashMapFile = mDataset.get(position).asDriveFile();
+                            hashMapFile.delete(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(Status status) {
+                                    if (status.isSuccess()) {
+                                        mDataset.remove(position);
+                                        Log.e(LOG_TAG,"Deleted hashmap file");
+                                        imageIds.get(position).asDriveFile().delete(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
+                                            @Override
+                                            public void onResult(Status status) {
+                                                if (status.isSuccess()) {
+                                                    imageIds.remove(position);
+                                                    Log.e(LOG_TAG, "Image File deleted");
+                                                    notifyDataSetChanged();
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
+                //Drive.DriveApi.getFile(mGoogleApiClient,mDataset.get(position)).delete(mGoogleApiClient);
+            }
+        });
 
     }
 

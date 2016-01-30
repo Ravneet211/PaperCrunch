@@ -76,5 +76,6 @@
     <string name="dialog_title">Delete Processed Image</string>
     <string name="view_receipt">Digitized Receipt</string>
     <string name="title_activity_bill_display">BillDisplayActivity</string>
+    <string name="title_activity_icon_tester">IconTesterActivity</string>
 
 </resources>
