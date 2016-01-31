@@ -13,14 +13,24 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 public class CameraActivity extends AppCompatActivity {
-    private static final int REQUEST_CAMERA_ACCESS_CODE = 0;
     private Activity activityReference = this;
     private static final int REQUEST_CAMERA_ACCESS = 0;
+    private static final int REQUEST_STORAGE_ACCESS = 1;
+    private static final int REQUEST_CAMERA_AND_STORAGE_ACCESS = 2;
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_ACCESS);
+        int externalStoragePermission = ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int cameraPermission = ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA);
+        if( externalStoragePermission != PackageManager.PERMISSION_GRANTED || cameraPermission != PackageManager.PERMISSION_GRANTED) {
+            if(externalStoragePermission != PackageManager.PERMISSION_GRANTED && cameraPermission != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA}, REQUEST_CAMERA_AND_STORAGE_ACCESS);
+            }
+            else if(externalStoragePermission != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_ACCESS);
+            }
+            else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_ACCESS);
+            }
         }
         setContentView(R.layout.activity_camera);
 
@@ -62,6 +72,22 @@ public class CameraActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
+            case REQUEST_CAMERA_AND_STORAGE_ACCESS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 1
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+                    activityReference.finish();
+                    System.exit(0);
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
             case REQUEST_CAMERA_ACCESS: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
@@ -77,9 +103,23 @@ public class CameraActivity extends AppCompatActivity {
                 }
                 return;
             }
+            case REQUEST_STORAGE_ACCESS :
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+                    activityReference.finish();
+                    System.exit(0);
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+
 
             // other 'case' lines to check for other
-            // permissions this app might request
+            // permissions this app might reques
         }
     }
 }

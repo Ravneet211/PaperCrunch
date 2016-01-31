@@ -89,6 +89,7 @@ public class CameraActivityFragment extends Fragment {
     EditText ocrResult;
     private String ScanType;
     private Integer REQUEST_CAMERA_PERMISSION = 0;
+    private static final int REQUEST_EXTERNAL_STORAGE_PERMISSION = 0;
 
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
         @Override
@@ -555,8 +556,8 @@ public class CameraActivityFragment extends Fragment {
     }
     public void saveToExternalStorage(Bitmap bitmap) {
         File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-        if (pictureFile == null) {
-            Log.d(LOG_TAG, "Error creating media file, check storage permissions");
+        if(pictureFile == null) {
+            Log.d(LOG_TAG, "Waiting for permission");
             return;
         }
 
@@ -642,7 +643,6 @@ public class CameraActivityFragment extends Fragment {
             Log.d(LOG_TAG, "Error creating media file, check storage permissions");
             return null;
         }
-
         try {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
