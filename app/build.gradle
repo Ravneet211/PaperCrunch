@@ -43,6 +43,7 @@ dependencies {
     compile 'com.github.bumptech.glide:glide:3.6.1'
     compile 'org.bytedeco.javacpp-presets:opencv:3.0.0-1.1'
     compile files('libs/opencv-android-arm.jar')
+    compile files('libs/opencv-android-x86.jar')
     compile 'com.github.ivbaranov:materiallettericon:0.2.1'
 }
 apply plugin: 'maven'

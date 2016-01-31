@@ -115,7 +115,6 @@ public class DriveSaveActivity extends AppCompatActivity implements GoogleApiCli
     public void onConnected(Bundle connectionHint) {
         Log.i(TAG, "API client connected.");
         if (mBitmapToSave == null) {
-            // This activity has no UI of its own. Just start the camera.
             File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"MyCameraApp");
             File imageFile = new File(mediaStorageDir.getPath()+File.separator+"receipt.jpg");
             if(!imageFile.exists()) {

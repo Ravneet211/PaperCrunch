@@ -88,6 +88,7 @@ public class CameraActivityFragment extends Fragment {
     String rs;
     EditText ocrResult;
     private String ScanType;
+    private Integer REQUEST_CAMERA_PERMISSION = 0;
 
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
         @Override
@@ -193,12 +194,14 @@ public class CameraActivityFragment extends Fragment {
         receiptAnalyzeInstruction.setVisibility(View.INVISIBLE);
         receiptAnalyzeContainerLayout = (LinearLayout)rootView.findViewById(R.id.receipt_instruction_container);
         if(mCamera == null) {
-            releaseCameraAndPreview();
-            mCamera = getCameraInstance();
-            mCamera.setDisplayOrientation(90);
-            if(mPreview != null) {
-                preview.removeView(mPreview);
-            }
+                releaseCameraAndPreview();
+                while(mCamera == null) {
+                    mCamera = getCameraInstance();
+                }
+                mCamera.setDisplayOrientation(90);
+                if (mPreview != null) {
+                    preview.removeView(mPreview);
+                }
         }
                 // Create our Preview view and set it as the content of our activity.
         if (mCamera != null) {
