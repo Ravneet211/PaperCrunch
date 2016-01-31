@@ -11,6 +11,4 @@ Known Issues -
 
 -> If the folder which contains PaperCrunch Documents is renamed, the app creates a new folder to store Documents
 
--> The app requires permissions to be set manually for Android 6.0 and above. 
-
 -> Deletion of items is slightly buggy.
